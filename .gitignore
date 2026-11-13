@@ -30,3 +30,6 @@ artifacts/
 .idea/
 .vscode/
 *.swp
+
+# Saída do Playwright MCP (QA manual)
+.playwright-mcp/

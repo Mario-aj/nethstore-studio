@@ -22,7 +22,7 @@ $COMPOSE stop garage >/dev/null
 trap '$COMPOSE start garage >/dev/null' EXIT
 for vol in garage-meta garage-data; do
 	docker run --rm -v "${PROJECT}_${vol}:/v:ro" -v "$PWD/$dir:/out" "$ALPINE" \
-		tar czf "/out/${vol}.tar.gz" -C /v .
+		sh -c "tar czf /out/${vol}.tar.gz -C /v . && chown $(id -u):$(id -g) /out/${vol}.tar.gz"
 done
 $COMPOSE start garage >/dev/null
 trap - EXIT
