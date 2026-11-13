@@ -81,3 +81,61 @@ Este ficheiro registra o que mudou ou foi decidido além do que está em `docs/S
 * **Política POST pelo SDK.** O `PresignPostObject` do `aws-sdk-go-v2` funcionou contra o Garage 2.5.0, então não há assinador próprio. Os nomes `x-amz-*` vão em minúsculas nos campos, como no exemplo da SPEC.
 * **Garage 2.5.0** (última 2.x estável em 13/11/2026). A chave S3 da API é gerada pelo `make init` e importada com `garage key import`, o que torna o `garage-init.sh` idempotente sem precisar ler segredos da saída do Garage.
 * **Log do `/api/health`** a cada 10 s (health check do contêiner) vai em nível `debug`, para não encher o log.
+
+## Frontend
+
+## Versões
+
+- TypeScript 6.0.3 (o typescript-eslint 8.72 aceita até `<6.1`; o TS 7 ficou de fora por isso).
+- Vite 8, React 19.3, React Router 8, TanStack Query 5, zod 4, vite-plugin-pwa 2, Vitest 5, MSW 3 (a opção chama-se `onUnhandledFrame`, não `onUnhandledRequest`), Playwright 1.65, ESLint 10.
+- `tsconfig.app.json` (código), `tsconfig.test.json` (testes, com tipos de Node) e `tsconfig.node.json` (configs e e2e). `tsc -b` cobre os três.
+
+### Visual e textos
+
+- As fotos do design são 5: vestido preto de bolinhas, conjunto laranja, conjunto azul e branco, vestido bege e blusa magenta. A blusa lilás e o vestido com faixa vinho da faixa "Como funciona" não estão no export, então a 6.ª foto da faixa repete o conjunto laranja.
+- `pnpm assets` extrai as fotos de `docs/design/*.html` (WebP 480/800/1200 em `src/assets/photos`), gera `public/og-image.jpg` (1200x630) e os ícones da PWA (`public/icons`, `public/favicon.svg`). Os ficheiros gerados ficam no repositório.
+- O carimbo desenhado por cima das fotos na landing usa Work Sans 500 (a fonte real do carimbo, SPEC 9.3) em vez do Arial bold do canvas.
+- A landing tem um menu suspenso com os 3 links atrás do botão de menu (o design só mostra o botão). "Entrar" e "Entrar no estúdio" levam a `/entrar`.
+- O comparador Depois/Antes usa um `<input type="range">` invisível por cima da foto: arrasta com o dedo e funciona com as setas do teclado.
+- Passo 1 de "Instalar": "O endereço é o do computador onde o Estúdio corre: {host}." No modo `public`: "O endereço do Estúdio é {host}."
+- Frases com variante para o modo `public` (`deployText` em `pt-AO.ts`): nota do hero, título e texto do passo 1 de Instalar, "A confirmar…" da Entrada, aviso "fora de alcance" da Entrada, mensagem "Podes bloquear o telemóvel…" e aviso "Perdeste a ligação…" do Processamento.
+- Em ecrãs largos as telas do app ficam numa coluna centrada de 560 px.
+
+### Comportamento
+
+- Entrada, "Muitas tentativas": a chave escrita fica no campo (bloqueado), para poder entrar logo que a contagem acaba. O design mostra 0/32.
+- Fotos e preço: os tamanhos também são obrigatórios para "Processar" (a API exige 1 a 6). Sem tamanhos o rodapé mostra "falta o tamanho" em coral.
+- O rótulo PREÇO fica coral e aparece "Escreve o preço para processar." assim que há fotos e o preço está vazio (estado "Preço em falta").
+- A faixa de miniaturas rola na horizontal com todas as fotos (design) em vez do "+N na última" da SPEC.
+- "Ver todas" usa o hash `#todas`, para o botão voltar do Android fechar a grelha.
+- Processamento: as etapas são calculadas no cliente a partir do estado de cada foto, com as mesmas regras da API (SPEC 7.3 e DECISOES). O cliente junta o que o gestor de envio já sabe (uma foto enviada antes do próximo polling, ou que falhou no envio) ao estado do servidor.
+- No estado "Uma foto falhou" a etapa "Pronto para guardar" aparece pendente (0/N) até a utilizadora escolher "Seguir com N" ou "Repetir", como no design, embora a API a dê como `completed`.
+- A miniatura usa `?v=s` (carimbada) ou `?v=p` (falhou no carimbo) no URL para o browser não reaproveitar uma miniatura antiga em cache depois de "Repetir" (a API manda `max-age=3600`). **A API tem de ignorar a query string nessas rotas.**
+- Uma foto que o browser não consegue decodificar falha logo no envio, sem gastar as 3 tentativas.
+- Depois de recarregar a página, as fotos ainda em `awaiting_upload` sem ficheiro em memória são reportadas com `upload-failed` e aparece "Escolher de novo": os ficheiros escolhidos são atribuídos às fotos em falta pela ordem das posições.
+- "Ligação de volta" aparece 5 s depois de a ligação voltar. "Saíste do app durante o envio" aparece ao voltar se a página ficou oculta durante o envio.
+- Partilhar: grupos de 10; o grupo seguinte é descarregado antes do toque, porque `navigator.share` tem de correr logo a seguir a ele.
+- Guardar todas: downloads em sequência com 350 ms de intervalo, nome tirado do `Content-Disposition`.
+- Qualquer `401 unauthenticated` numa rota protegida volta a consultar `me`, e a guarda de rota manda para `/entrar?next=…`.
+
+### Contrato da API assumido
+
+- POST sem corpo (`logout`, `uploaded`, `upload-slot`, `upload-failed`, `retry`) vai sem `Content-Type`.
+- `upload-slot` devolve `{ url, fields, expiresAt }`. O `url` começa por `/`.
+- O gestor de envio trata `409 invalid_state` em `uploaded` ou `upload-slot` como "a foto já passou do envio".
+
+### Build, dev e testes
+
+- `VITE_APP_ORIGIN` (sem barra no fim) entra no build: canonical, Open Graph, `robots.txt` e `sitemap.xml` (gerados pelo plugin `estudio-seo` no `vite.config.ts`). Na imagem: `VITE_APP_ORIGIN=$APP_ORIGIN pnpm build`. Sem a variável vale `https://localhost`.
+- `pnpm dev` faz proxy de `/api` e `/s3` para `https://localhost` (mude com `ESTUDIO_DEV_TARGET`) e reescreve o `Origin`.
+- `pnpm dev:mock` corre sem backend: MSW num service worker servido só em modo mock (nunca vai para `dist`). Cenários com `?cenario=`: `desligado`, `errada`, `bloqueada`, `verificar`, `publico`, `enviar`, `sem-ligacao`, `aplicar`, `erro`. A chave aceita é a do exemplo da SPEC 7.2.
+- E2E (`pnpm e2e`): precisa de `E2E_SECRET` (chave da stack de teste) e, opcionalmente, `E2E_BASE_URL` (padrão `https://localhost`). O setup global entra uma vez pela tela e guarda a sessão em `tests/e2e/.auth/` (ignorado no git), para gastar só uma tentativa de login. "Chave errada, depois certa" corre só no perfil de 390 px. Os service workers ficam bloqueados (o da PWA esconderia os pedidos `/s3` do `page.route`), exceto em `pwa.spec.ts`.
+- A falha forçada do teste "Repetir" responde `403` ao envio de uma foto 3 vezes. Um `abort` contaria como perda de ligação e pausaria a fila em vez de falhar.
+- `E2E_MOCK=1 E2E_BASE_URL=http://localhost:5173 E2E_SECRET=k7Qm2xVb9Lp4TzR8nWc1Hs6YdJ3fGa5E pnpm e2e` corre a suíte contra o `dev:mock` (os testes que dependem da stack real são saltados).
+- Capturas: `artifacts/screens/<perfil>/<tela>.png` na raiz do repositório.
+- A primeira vez: `pnpm exec playwright install chromium`.
+
+### Correções feitas na integração
+
+- Depois de "Repetir" uma foto que falhou no envio, o polling já tinha parado (a última resposta dizia `finished: true`). A página agora consulta o lote de novo quando os envios terminam, e o polling volta até o servidor acabar. O e2e "a failed upload is repeated with Repetir" cobre o caso.
+- O Chromium do Playwright recusa registar o service worker numa origem com certificado da CA interna mesmo com `ignoreHTTPSErrors`; o `playwright.config.ts` passa `--ignore-certificate-errors`.

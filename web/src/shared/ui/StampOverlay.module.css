@@ -1,0 +1,13 @@
+/* Imitação visual do carimbo (Work Sans Medium, preto, canto superior esquerdo).
+   O tamanho acompanha a largura da foto: o contentor tem container-type inline-size. */
+.stamp {
+  position: absolute;
+  left: 4.5cqi;
+  top: 3.5cqi;
+  color: var(--color-stamp);
+  font-family: var(--font-sans);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+}

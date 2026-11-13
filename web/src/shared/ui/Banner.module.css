@@ -1,0 +1,75 @@
+.banner {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius-field-lg);
+  border: var(--line) solid;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.error {
+  background: var(--color-error-soft);
+  border-color: var(--color-error-line);
+  color: var(--color-error-text);
+}
+
+.success {
+  background: var(--color-success-soft);
+  border-color: var(--color-success-line);
+  color: var(--color-success-text);
+}
+
+.icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+}
+
+.body {
+  font-size: var(--text-note);
+  line-height: 1.45;
+  color: var(--color-text-soft);
+}
+
+.trailing {
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.notice {
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-note);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.notice svg {
+  flex-shrink: 0;
+}
+
+.calm {
+  background: var(--color-surface-1);
+  color: var(--color-text-soft);
+}
+
+.warn {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-soft-text);
+}

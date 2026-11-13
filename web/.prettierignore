@@ -1,0 +1,10 @@
+dist
+dev-dist
+coverage
+playwright-report
+test-results
+node_modules
+pnpm-lock.yaml
+src/assets
+public
+tests/e2e/.auth

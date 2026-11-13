@@ -1,0 +1,45 @@
+.sheet {
+  position: fixed;
+  inset: auto 0 0 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90dvh;
+  padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
+  border: 0;
+  border-top: var(--line) solid var(--color-line-strong);
+  border-radius: var(--radius-card-lg) var(--radius-card-lg) 0 0;
+  background: var(--color-surface-1);
+  color: var(--color-text);
+  overflow-y: auto;
+}
+
+.sheet[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: rise 0.2s ease-out;
+}
+
+.sheet::backdrop {
+  background: var(--color-scrim);
+}
+
+.handle {
+  align-self: center;
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-line-strong);
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(24px);
+    opacity: 0.6;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}

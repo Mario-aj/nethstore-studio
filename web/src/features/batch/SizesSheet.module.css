@@ -1,0 +1,68 @@
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: var(--weight-light);
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.chips {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.chip {
+  height: var(--button-h);
+  border-radius: var(--radius-pill);
+  border: var(--line) solid var(--color-line-strong);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font-size: 17px;
+  font-weight: var(--weight-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent-soft-text);
+}
+
+.preview {
+  padding: 14px 0;
+  border-top: var(--line) solid var(--color-line);
+  border-bottom: var(--line) solid var(--color-line);
+  font-size: 14px;
+  color: var(--color-text-muted);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.preview strong {
+  font-weight: var(--weight-regular);
+  color: var(--color-text);
+  text-align: right;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.actions > :last-child {
+  flex-grow: 1;
+}

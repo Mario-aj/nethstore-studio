@@ -1,0 +1,69 @@
+.tile {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-photo);
+  overflow: hidden;
+  background: var(--color-surface-1);
+}
+
+.thumb {
+  border-radius: var(--radius-thumb);
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.processing .img {
+  opacity: 0.4;
+}
+
+.error {
+  border: var(--line) solid var(--color-error);
+}
+
+.error .img {
+  opacity: 0.35;
+}
+
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+}
+
+.remove {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.removeDot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-bg);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,0 +1,60 @@
+.splash {
+  min-height: 100dvh;
+  background: var(--color-bg);
+}
+
+.notFound {
+  min-height: 100dvh;
+  padding: 96px 20px 40px;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.brand {
+  font-size: 13px;
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-brand);
+}
+
+.notFound h1 {
+  font-size: var(--text-h1-app);
+  font-weight: var(--weight-light);
+  letter-spacing: var(--tracking-display);
+  line-height: 1.1;
+  margin-top: 24px;
+}
+
+.notFound p {
+  font-size: var(--text-body-lg);
+  color: var(--color-text-soft);
+}
+
+.notFound a {
+  margin-top: 16px;
+  align-self: flex-start;
+}
+
+.update {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 50;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 12px 12px 12px 18px;
+  border-radius: var(--radius-card);
+  border: var(--line) solid var(--color-line-strong);
+  background: var(--color-surface-1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.update p {
+  flex-grow: 1;
+  font-size: var(--text-body);
+}

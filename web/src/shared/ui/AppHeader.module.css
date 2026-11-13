@@ -1,0 +1,26 @@
+.header {
+  height: 64px;
+  padding: 0 12px 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.compact {
+  height: 56px;
+  padding: 0 20px;
+}
+
+.brand {
+  font-size: 13px;
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-brand);
+}
+
+.eyebrow {
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-text-muted);
+}
