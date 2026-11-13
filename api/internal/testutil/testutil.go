@@ -86,7 +86,7 @@ func (m *MemStorage) PresignUpload(_ context.Context, key string, now time.Time)
 	m.mu.Unlock()
 	return storage.Upload{
 		URL: "/s3/estudio",
-		Fields: map[string]string{ //nolint:gosec // G101: fake values for tests
+		Fields: map[string]string{ // #nosec G101 -- fake values for tests
 			"key": key, "Content-Type": "image/jpeg", "policy": "cG9saWN5", "x-amz-algorithm": "AWS4-HMAC-SHA256",
 			"x-amz-credential": "GK/20261113/garage/s3/aws4_request", "x-amz-date": now.UTC().Format("20060102T150405Z"), "x-amz-signature": "00",
 		},

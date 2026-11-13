@@ -87,6 +87,9 @@ func (s *Server) observe(next http.Handler) http.Handler {
 				}
 			}
 			level := slog.LevelInfo
+			if r.URL.Path == "/api/health" && rec.status == http.StatusOK {
+				level = slog.LevelDebug // container health probes every 10 s
+			}
 			if rec.status >= 500 {
 				level = slog.LevelError
 			}

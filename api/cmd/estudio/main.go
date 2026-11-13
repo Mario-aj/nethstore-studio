@@ -6,6 +6,7 @@
 //	estudio sessions list         list sessions
 //	estudio sessions revoke-all   delete every session
 //	estudio healthcheck           container health probe
+//	estudio backup > estudio.db   consistent database copy to stdout
 package main
 
 import (
@@ -18,6 +19,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -40,6 +42,7 @@ commands:
   sessions list         list active sessions
   sessions revoke-all   revoke every session
   healthcheck           exit 0 when the local API answers /api/health
+  backup                write a consistent copy of the database to stdout
 `
 
 // CLI output helpers: a failed write to the terminal is not actionable.
@@ -120,6 +123,30 @@ func run(args []string, stdout, stderr io.Writer) error {
 		return errors.New("unknown sessions command")
 	case "healthcheck":
 		return healthcheck()
+	case "backup":
+		// Consistent copy (VACUUM INTO) streamed to stdout: estudio backup > estudio.db
+		return withDB(func(ctx context.Context, db *store.DB) error {
+			tmp, err := os.MkdirTemp("", "estudio-backup-")
+			if err != nil {
+				return err
+			}
+			defer func() { _ = os.RemoveAll(tmp) }()
+			if err := db.Backup(ctx, tmp+"/estudio.db"); err != nil {
+				return err
+			}
+			root, err := os.OpenRoot(tmp)
+			if err != nil {
+				return err
+			}
+			defer func() { _ = root.Close() }()
+			f, err := root.Open("estudio.db")
+			if err != nil {
+				return err
+			}
+			defer func() { _ = f.Close() }()
+			_, err = io.Copy(stdout, f)
+			return err
+		})
 	case "-h", "--help", "help":
 		out(stdout, usage)
 		return nil
@@ -150,18 +177,23 @@ func healthcheck() error {
 	if addr == "" {
 		addr = ":8080"
 	}
-	_, port, err := net.SplitHostPort(addr)
+	_, portStr, err := net.SplitHostPort(addr)
 	if err != nil {
 		return fmt.Errorf("LISTEN_ADDR: %w", err)
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil || port < 1 || port > 65535 {
+		return fmt.Errorf("LISTEN_ADDR: invalid port %q", portStr)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	// Local probe of our own port, taken from our own configuration.
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://127.0.0.1:"+port+"/api/health", nil) //nolint:gosec // G704: fixed loopback URL
+	url := fmt.Sprintf("http://127.0.0.1:%d/api/health", port)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil) // #nosec G704 -- loopback only, numeric port
 	if err != nil {
 		return err
 	}
-	resp, err := http.DefaultClient.Do(req) //nolint:gosec // G704: fixed loopback URL
+	resp, err := http.DefaultClient.Do(req) // #nosec G704 -- loopback only, numeric port
 	if err != nil {
 		return err
 	}

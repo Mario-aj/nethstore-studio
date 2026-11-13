@@ -105,10 +105,10 @@ func VerifySecret(secret, phc string) (bool, error) {
 		return false, ErrBadHash
 	}
 	want, err := enc.DecodeString(parts[5])
-	if err != nil || len(want) == 0 || len(want) > 64 {
+	if err != nil || len(want) != argonKeyLen {
 		return false, ErrBadHash
 	}
-	got := argon2.IDKey([]byte(secret), salt, t, m, p, uint32(len(want))) //nolint:gosec // G115: len(want) <= 64
+	got := argon2.IDKey([]byte(secret), salt, t, m, p, argonKeyLen)
 	return subtle.ConstantTimeCompare(got, want) == 1, nil
 }
 

@@ -71,3 +71,13 @@ Este ficheiro registra o que mudou ou foi decidido além do que está em `docs/S
 * **Miniatura carimbada.** A SPEC gera a miniatura na etapa `prepare`, ou seja, sem carimbo. As telas Processamento ("Já prontas") e Pronto mostram miniaturas carimbadas. A etapa `stamp` volta a gravar a miniatura, agora a partir da imagem carimbada, na mesma chave `thumbs/`.
 * **Perda de ligação durante o envio.** Erros de rede (sem resposta) pausam a fila inteira e tentam de novo a cada 8 s, sem gastar as 3 tentativas da foto. Só respostas de erro do armazenamento ou da API contam como tentativa. Isto reproduz o estado "Sem ligação" do design.
 * **Partilhar em grupos de 10.** `navigator.share` exige um toque por chamada. Com mais de 10 fotos, depois de partilhar o primeiro grupo o botão passa a "Partilhar as próximas N".
+* **Tentativas de processamento.** "Até 3 tentativas, espera de 5 s, 30 s e 2 min" foi lido como 1 execução mais 3 novas tentativas, uma para cada espera. Depois disso a foto fica `failed` com `processing_failed`.
+* **Tentativas de login recusadas pelo limite não são gravadas** em `login_attempts`. Se fossem, quem insiste durante o bloqueio estenderia o bloqueio para sempre. As tentativas avaliadas (certas e erradas) são todas gravadas.
+* **Coluna nova `batches.originals_purged_at`** (migração `0002`). O zelador marca o lote depois de apagar originais e miniaturas, para não listar os mesmos prefixos todos os dias. A rota `/thumb` usa a foto carimbada quando a miniatura já foi apagada.
+* **Rede interna.** API e Garage ficam numa rede Docker `internal: true` (sem saída para a internet). Só o Caddy está também na rede `edge` e publica portas.
+* **IP real do cliente.** A API resolve o nome do contêiner do Caddy (`TRUSTED_PROXY_HOST=caddy`) e só então lê o último valor de `X-Forwarded-For`.
+* **Comandos extra no binário**: `estudio healthcheck` (a imagem distroless não tem curl) e `estudio backup` (cópia consistente com `VACUUM INTO` para a saída padrão, usada por `make backup`).
+* **Toolchain Go fixado em 1.26.11** (`toolchain` no `go.mod`): o 1.26.3 da máquina tinha vulnerabilidades conhecidas na biblioteca padrão, que o `govulncheck` apontava.
+* **Política POST pelo SDK.** O `PresignPostObject` do `aws-sdk-go-v2` funcionou contra o Garage 2.5.0, então não há assinador próprio. Os nomes `x-amz-*` vão em minúsculas nos campos, como no exemplo da SPEC.
+* **Garage 2.5.0** (última 2.x estável em 13/11/2026). A chave S3 da API é gerada pelo `make init` e importada com `garage key import`, o que torna o `garage-init.sh` idempotente sem precisar ler segredos da saída do Garage.
+* **Log do `/api/health`** a cada 10 s (health check do contêiner) vai em nível `debug`, para não encher o log.
