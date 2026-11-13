@@ -1,0 +1,32 @@
+# Segredos e dados locais
+.env
+.env.*
+!.env.example
+deploy/ca/*
+!deploy/ca/.gitkeep
+backups/
+data/
+
+# Go
+api/bin/
+api/coverage*.out
+*.test
+
+# Web
+node_modules/
+web/dist/
+web/dev-dist/
+web/coverage/
+web/test-results/
+web/playwright-report/
+web/blob-report/
+*.tsbuildinfo
+
+# Artefactos de QA
+artifacts/
+
+# Editores e SO
+.DS_Store
+.idea/
+.vscode/
+*.swp

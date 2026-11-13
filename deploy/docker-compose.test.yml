@@ -1,0 +1,22 @@
+# Garage descartável para `make test-integration`. Publica o S3 só em
+# 127.0.0.1:39000 e não guarda dados entre execuções.
+name: estudio-test
+
+services:
+  garage:
+    image: dxflrs/garage:v2.5.0@sha256:677e5b758e4425a325b811c425c026bf35a4bf42f7ddbaa773de3f4fd779a5a5
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET}
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN}
+    volumes:
+      - ./deploy/garage.toml:/etc/garage.toml:ro
+    tmpfs:
+      - /var/lib/garage/meta
+      - /var/lib/garage/data
+    ports:
+      - "127.0.0.1:39000:3900"
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 2s
+      timeout: 5s
+      retries: 20

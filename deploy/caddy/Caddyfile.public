@@ -1,0 +1,13 @@
+# Modo public: domínio próprio com certificado Let's Encrypt automático.
+# O Caddy redireciona HTTP para HTTPS sozinho.
+{
+	email {$ACME_EMAIL}
+	admin localhost:2019
+}
+
+import /etc/caddy/common.caddy
+
+{$PUBLIC_DOMAIN} {
+	header Strict-Transport-Security "max-age=31536000"
+	import app
+}

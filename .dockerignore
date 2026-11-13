@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+backups
+artifacts
+deploy/ca
+docs
+**/node_modules
+web/dist
+web/dev-dist
+web/coverage
+web/test-results
+web/playwright-report
+api/bin
+api/coverage.out

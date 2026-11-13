@@ -1,0 +1,55 @@
+# Rotas e cabeçalhos partilhados pelos modos lan e public (SPEC 5).
+# Só POST /s3/estudio chega ao Garage; qualquer outro /s3 devolve 404.
+(app) {
+	encode zstd gzip
+
+	header {
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), screen-wake-lock=(self)"
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+		-Server
+	}
+
+	# Só a landing é indexável (docs/DECISOES.md, item 9).
+	@noindex not path / /index.html
+	header @noindex X-Robots-Tag "noindex"
+
+	# Um único bloco para /s3 deixa a ordem explícita: o POST da política vai
+	# para o Garage, todo o resto (GET, PUT, DELETE, outros caminhos) dá 404.
+	handle /s3* {
+		@upload {
+			method POST
+			path /s3/estudio
+		}
+		handle @upload {
+			request_body {
+				max_size 16MB
+			}
+			uri strip_prefix /s3
+			reverse_proxy garage:3900
+		}
+		handle {
+			respond 404
+		}
+	}
+
+	handle /api/* {
+		request_body {
+			max_size 64KB
+		}
+		reverse_proxy api:8080
+	}
+
+	handle {
+		root * /srv/web
+		@immutable path /assets/*
+		header @immutable Cache-Control "public, max-age=31536000, immutable"
+		@nocache path / /index.html /sw.js /registerSW.js /manifest.webmanifest /robots.txt /sitemap.xml
+		header @nocache Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}

@@ -1,0 +1,142 @@
+# NethStore Estúdio. Use sempre pelo Makefile (make up, make down, ...), que
+# corre `docker compose --project-directory . -f deploy/docker-compose.yml`
+# a partir da raiz do repositório, com o .env da raiz.
+#
+# Só o Caddy publica portas. API e Garage ficam numa rede interna sem saída
+# para a internet.
+name: estudio
+
+x-hardening: &hardening
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  tmpfs:
+    - /tmp
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  # Ajusta o dono dos volumes para os utilizadores sem root dos serviços.
+  init-perms:
+    image: alpine:3.22@sha256:49340b346798875b5592e5d420241f2f9cfba5f47e62ebb1446a1b34734e898f
+    command:
+      - sh
+      - -c
+      - chown -R 65532:65532 /v/api && chown -R 1000:1000 /v/garage-meta /v/garage-data /v/caddy-data /v/caddy-config
+    volumes:
+      - api-data:/v/api
+      - garage-meta:/v/garage-meta
+      - garage-data:/v/garage-data
+      - caddy-data:/v/caddy-data
+      - caddy-config:/v/caddy-config
+    network_mode: none
+    restart: "no"
+
+  garage:
+    <<: *hardening
+    image: dxflrs/garage:v2.5.0@sha256:677e5b758e4425a325b811c425c026bf35a4bf42f7ddbaa773de3f4fd779a5a5
+    user: "1000:1000"
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:?run make init}
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:?run make init}
+    volumes:
+      - ./deploy/garage.toml:/etc/garage.toml:ro
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
+    depends_on:
+      init-perms:
+        condition: service_completed_successfully
+
+  api:
+    <<: *hardening
+    build:
+      context: .
+      dockerfile: deploy/api.Dockerfile
+    image: estudio-api:local
+    environment:
+      DEPLOY_MODE: ${DEPLOY_MODE:-lan}
+      APP_ORIGIN: ${APP_ORIGIN:?run make init}
+      DATABASE_PATH: /data/estudio.db
+      S3_ENDPOINT: http://garage:3900
+      S3_REGION: garage
+      S3_BUCKET: estudio
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?run make init}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?run make init}
+      UPLOAD_PATH: /s3/estudio
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-15728640}
+      MAX_PHOTOS_PER_BATCH: ${MAX_PHOTOS_PER_BATCH:-50}
+      SESSION_TTL: ${SESSION_TTL:-720h}
+      WORKERS: ${WORKERS:-2}
+      RETENTION_ORIGINALS_DAYS: ${RETENTION_ORIGINALS_DAYS:-30}
+      RETENTION_BATCHES_DAYS: ${RETENTION_BATCHES_DAYS:-90}
+      LOGIN_GLOBAL_LOCKOUT: ${LOGIN_GLOBAL_LOCKOUT:-}
+      TRUSTED_PROXY_HOST: caddy
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - api-data:/data
+    networks: [backend]
+    stop_grace_period: 45s
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/estudio", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
+    depends_on:
+      garage:
+        condition: service_healthy
+
+  caddy:
+    <<: *hardening
+    build:
+      context: .
+      dockerfile: deploy/caddy.Dockerfile
+      args:
+        VITE_APP_ORIGIN: ${APP_ORIGIN:?run make init}
+    image: estudio-caddy:local
+    user: "1000:1000"
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile.${DEPLOY_MODE:-lan}", "--adapter", "caddyfile"]
+    environment:
+      LAN_HOST: ${LAN_HOST:-}
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:-}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    ports:
+      - "${BIND_ADDR:-0.0.0.0}:80:80"
+      - "${BIND_ADDR:-0.0.0.0}:443:443"
+    sysctls:
+      net.ipv4.ip_unprivileged_port_start: 0
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [edge, backend]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+    depends_on:
+      api:
+        condition: service_healthy
+
+networks:
+  edge: {}
+  backend:
+    internal: true
+
+volumes:
+  api-data: {}
+  garage-meta: {}
+  garage-data: {}
+  caddy-data: {}
+  caddy-config: {}

@@ -1,0 +1,8 @@
+[
+  { "priceKz": 8000, "sizes": ["S", "M"], "description": "Veste", "line1": "Veste/ S e M", "line2": "8.000 kz" },
+  { "priceKz": 10000, "sizes": ["L", "M"], "description": "Veste", "line1": "Veste/ M e L", "line2": "10.000 kz" },
+  { "priceKz": 2500, "sizes": ["M"], "description": null, "line1": "M", "line2": "2.500 kz" },
+  { "priceKz": 15000, "sizes": ["XL", "S", "M"], "description": "Conjunto", "line1": "Conjunto/ S, M e XL", "line2": "15.000 kz" },
+  { "priceKz": 999, "sizes": ["2XL", "XS"], "description": "  Saia   longa ", "line1": "Saia longa/ XS e 2XL", "line2": "999 kz" },
+  { "priceKz": 1250000, "sizes": ["XS", "S", "M", "L", "XL", "2XL"], "description": "", "line1": "XS, S, M, L, XL e 2XL", "line2": "1.250.000 kz" }
+]

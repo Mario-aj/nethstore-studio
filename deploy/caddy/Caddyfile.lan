@@ -1,0 +1,17 @@
+# Modo lan: acesso pelo IP fixo do computador na rede de casa, com a CA
+# interna do Caddy (o certificado raiz é instalado no telemóvel).
+{
+	default_sni {$LAN_HOST}
+	admin localhost:2019
+}
+
+import /etc/caddy/common.caddy
+
+https://{$LAN_HOST} {
+	tls internal
+	import app
+}
+
+http://{$LAN_HOST} {
+	redir https://{$LAN_HOST}{uri} permanent
+}
