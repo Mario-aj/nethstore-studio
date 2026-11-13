@@ -1,0 +1,7 @@
+# Regras padrão do gitleaks, menos o valor de exemplo da SPEC 7.2.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Chave de exemplo pública de docs/SPEC.md 7.2, usada em testes e no modo mock"
+regexes = ['''k7Qm2xVb9Lp4TzR8nWc1Hs6YdJ3fGa5E''']

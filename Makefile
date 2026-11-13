@@ -97,7 +97,7 @@ audit: ## govulncheck, gosec, pnpm audit e gitleaks
 	cd api && go run $(GOVULNCHECK) ./...
 	cd api && go run $(GOSEC) -quiet -severity medium -exclude-generated ./...
 	cd web && pnpm audit --audit-level high
-	docker run --rm -v "$(CURDIR):/repo" $(GITLEAKS_IMAGE) git --no-banner --redact -v /repo
+	docker run --rm -v "$(CURDIR):/repo" $(GITLEAKS_IMAGE) git --no-banner --redact --config /repo/.gitleaks.toml /repo
 
 .PHONY: security-check
 security-check: ## curl contra a stack: cabeçalhos, cookies, 401, 403, 404 do /s3
