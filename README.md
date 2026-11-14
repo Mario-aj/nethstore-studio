@@ -61,7 +61,7 @@ Para experimentar nesta máquina: `DEPLOY_MODE=lan LAN_HOST=localhost make init 
 * [docs/FRONTEND-SPEC.md](docs/FRONTEND-SPEC.md) e [docs/design/](docs/design/): telas, textos e tokens.
 * [docs/DECISOES.md](docs/DECISOES.md): decisões e diferenças em relação à spec.
 * [docs/OPERACAO.md](docs/OPERACAO.md): instalação, modos de deploy, backup, atualização, firewall.
-* [docs/INSTALAR-NO-TELEMOVEL.md](docs/INSTALAR-NO-TELEMOVEL.md): CA e PWA no Android.
+* [docs/INSTALAR-NO-TELEMOVEL.md](docs/INSTALAR-NO-TELEMOVEL.md): CA e PWA no Android e no iPhone.
 * [docs/QA-REPORT.md](docs/QA-REPORT.md): o que foi testado e o que falta validar no telemóvel.
 
 ## Segurança em resumo
