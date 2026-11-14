@@ -1,5 +1,6 @@
 .banner {
-  width: 100%;
+  /* Full width even in centred columns, without overflowing when given side margins. */
+  align-self: stretch;
   padding: 14px 16px;
   border-radius: var(--radius-field-lg);
   border: var(--line) solid;
