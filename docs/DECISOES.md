@@ -27,7 +27,7 @@ Este ficheiro registra o que mudou ou foi decidido além do que está em `docs/S
 * `429 too_many_attempts`: além do cabeçalho `Retry-After`, o corpo traz `retryAfterSeconds` (o mesmo valor), para a interface não depender de ler cabeçalhos.
 * `POST /api/photos/{id}/upload-failed`: a app avisa que desistiu de enviar uma foto (3 tentativas esgotadas, ou a página recarregou e o ficheiro já não está em memória). A foto passa de `awaiting_upload` para `failed` com `failedStep = upload` e `errorCode = upload_failed`. `204`. Sem isto o lote nunca ficaria `finished` até o zelador agir (24 h). `upload-slot` volta a aceitar a foto, como a SPEC já previa.
 * `GET /api/batches/{id}` também traz `photoCount`. `steps.ready` não traz `done`/`total`.
-* `GET /api/batches?limit=10` devolve `{ "batches": [ { "id", "seq", "priceKz", "sizes", "description", "stampLine1", "stampLine2", "photoCount", "stampedCount", "failedCount", "finished", "createdAt" } ] }`.
+* `GET /api/batches?limit=10&before=<seq>` devolve `{ "batches": [ { "id", "seq", "priceKz", "sizes", "description", "stampLine1", "stampLine2", "photoCount", "stampedCount", "failedCount", "finished", "createdAt", "coverPhotoId" } ], "nextBefore": 12 }`, do mais novo para o mais velho. `limit` vai de 1 a 50 (padrão 10). `before` (opcional) é o `seq` a partir do qual a página começa, exclusivo. `nextBefore` é o `before` da página seguinte, ou `null` na última. `coverPhotoId` é a primeira foto carimbada pela posição (a capa na lista de lotes), ou `null` se nenhuma ficou pronta. Acrescentado em 14/11/2026 para a tela Lotes.
 * Estado da etapa `ready`: `completed` quando nada está em andamento e há ao menos uma foto pronta; `error` quando nada está em andamento e nenhuma ficou pronta; `pending` no resto.
 
 ### Códigos de erro da API
@@ -41,6 +41,8 @@ Este ficheiro registra o que mudou ou foi decidido além do que está em `docs/S
 | 400 | `invalid_description` | Descrição com mais de 24 caracteres ou caracteres proibidos |
 | 400 | `invalid_photo_count` | `photoCount` fora de 1 a 50 |
 | 400 | `invalid_id` | ID do caminho não é UUID |
+| 400 | `invalid_limit` | `limit` da lista de lotes fora de 1 a 50 |
+| 400 | `invalid_before` | `before` da lista de lotes não é um inteiro positivo |
 | 401 | `unauthenticated` | Sem sessão válida |
 | 401 | `invalid_secret` | Chave errada |
 | 403 | `forbidden_origin` | `Origin` diferente de `APP_ORIGIN` |

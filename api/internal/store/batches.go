@@ -68,6 +68,8 @@ type BatchSummary struct {
 	StampedCount int
 	FailedCount  int
 	InFlight     int
+	// CoverPhotoID is the first stamped photo by position, nil while none is stamped.
+	CoverPhotoID *string
 }
 
 const batchCols = `id, seq, price_kz, sizes, description, stamp_line1, stamp_line2, photo_count, created_at, originals_purged_at`
@@ -214,14 +216,17 @@ func (d *DB) GetPhoto(ctx context.Context, id string) (Photo, error) {
 	return p, err
 }
 
-// ListBatches returns the most recent batches with counts.
-func (d *DB) ListBatches(ctx context.Context, limit int) ([]BatchSummary, error) {
+// ListBatches returns the most recent batches with counts, newest first. With
+// before > 0 it starts at the batch just older than seq `before` (pagination).
+func (d *DB) ListBatches(ctx context.Context, limit int, before int64) ([]BatchSummary, error) {
 	rows, err := d.R.QueryContext(ctx, `SELECT b.id, b.seq, b.price_kz, b.sizes, b.description, b.stamp_line1, b.stamp_line2, b.photo_count, b.created_at, b.originals_purged_at,
 		COALESCE(SUM(CASE WHEN p.status = 'stamped' THEN 1 ELSE 0 END), 0),
 		COALESCE(SUM(CASE WHEN p.status = 'failed' THEN 1 ELSE 0 END), 0),
-		COALESCE(SUM(CASE WHEN p.status IN ('awaiting_upload', 'uploaded', 'prepared') THEN 1 ELSE 0 END), 0)
+		COALESCE(SUM(CASE WHEN p.status IN ('awaiting_upload', 'uploaded', 'prepared') THEN 1 ELSE 0 END), 0),
+		(SELECT c.id FROM photos c WHERE c.batch_id = b.id AND c.status = 'stamped' ORDER BY c.position LIMIT 1)
 		FROM batches b LEFT JOIN photos p ON p.batch_id = b.id
-		GROUP BY b.id ORDER BY b.seq DESC LIMIT ?`, limit)
+		WHERE ? <= 0 OR b.seq < ?
+		GROUP BY b.id ORDER BY b.seq DESC LIMIT ?`, before, before, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -230,10 +235,13 @@ func (d *DB) ListBatches(ctx context.Context, limit int) ([]BatchSummary, error)
 	for rows.Next() {
 		var s BatchSummary
 		var sizes, created string
-		var desc, purged sql.NullString
+		var desc, purged, cover sql.NullString
 		if err := rows.Scan(&s.ID, &s.Seq, &s.PriceKz, &sizes, &desc, &s.StampLine1, &s.StampLine2, &s.PhotoCount, &created, &purged,
-			&s.StampedCount, &s.FailedCount, &s.InFlight); err != nil {
+			&s.StampedCount, &s.FailedCount, &s.InFlight, &cover); err != nil {
 			return nil, err
+		}
+		if cover.Valid {
+			s.CoverPhotoID = &cover.String
 		}
 		if err := json.Unmarshal([]byte(sizes), &s.Sizes); err != nil {
 			return nil, err

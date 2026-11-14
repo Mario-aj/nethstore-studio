@@ -328,8 +328,13 @@ func TestNotFoundAndMethodNotAllowed(t *testing.T) {
 	if w := e.do(req{method: "GET", path: "/api/batches/not-a-uuid", cookie: tok}); w.Code != 400 || errCode(t, w) != "invalid_id" {
 		t.Fatalf("%d %s", w.Code, w.Body)
 	}
-	if w := e.do(req{method: "GET", path: "/api/batches?limit=500", cookie: tok}); w.Code != 400 {
+	if w := e.do(req{method: "GET", path: "/api/batches?limit=500", cookie: tok}); w.Code != 400 || errCode(t, w) != "invalid_limit" {
 		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	for _, before := range []string{"0", "-3", "x", "1.5"} {
+		if w := e.do(req{method: "GET", path: "/api/batches?before=" + before, cookie: tok}); w.Code != 400 || errCode(t, w) != "invalid_before" {
+			t.Fatalf("before=%s: %d %s", before, w.Code, w.Body)
+		}
 	}
 	if w := e.do(req{method: "GET", path: "/api/batches/01933f6e-0000-7000-8000-000000000000", cookie: tok}); w.Code != 404 {
 		t.Fatalf("%d %s", w.Code, w.Body)
@@ -412,8 +417,12 @@ func TestFullBatchFlowAndLogsHaveNoSecrets(t *testing.T) {
 	}
 
 	w = e.do(req{method: "GET", path: "/api/batches?limit=5", cookie: tok})
-	if w.Code != 200 || !strings.Contains(w.Body.String(), `"batches":[{`) {
+	if w.Code != 200 || !strings.Contains(w.Body.String(), `"batches":[{`) || !strings.Contains(w.Body.String(), `"nextBefore":null`) ||
+		!strings.Contains(w.Body.String(), `"coverPhotoId":`) {
 		t.Fatalf("list %d %s", w.Code, w.Body)
+	}
+	if w := e.do(req{method: "GET", path: "/api/batches?before=1", cookie: tok}); w.Code != 200 || w.Body.String() != `{"batches":[],"nextBefore":null}`+"\n" {
+		t.Fatalf("list before %d %q", w.Code, w.Body)
 	}
 	if w := e.do(req{method: "DELETE", path: "/api/batches/" + created.ID, cookie: tok}); w.Code != 204 {
 		t.Fatalf("delete %d %s", w.Code, w.Body)

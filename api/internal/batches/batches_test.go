@@ -3,6 +3,7 @@ package batches
 import (
 	"context"
 	"errors"
+	"fmt"
 	"image/color"
 	"strings"
 	"testing"
@@ -264,8 +265,9 @@ func TestImagesAndDelete(t *testing.T) {
 		t.Fatalf("stamped %+v %v", st, err)
 	}
 
-	list, err := f.svc.List(ctx, 10)
-	if err != nil || len(list) != 1 || list[0].StampedCount != 1 || !list[0].Finished {
+	list, err := f.svc.List(ctx, 10, 0)
+	if err != nil || len(list.Batches) != 1 || list.Batches[0].StampedCount != 1 || !list.Batches[0].Finished ||
+		list.Batches[0].CoverPhotoID == nil || *list.Batches[0].CoverPhotoID != id || list.NextBefore != nil {
 		t.Fatalf("list %+v %v", list, err)
 	}
 
@@ -280,6 +282,71 @@ func TestImagesAndDelete(t *testing.T) {
 	}
 	if _, err := f.svc.Get(ctx, out.ID); !errors.Is(err, ErrNotFound) {
 		t.Fatal("batch still there")
+	}
+}
+
+func TestListPagesAndCover(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	now := f.clock.Now()
+	// Seven closed batches (seq 1 to 7). Photo 1 of each fails, so the cover is photo 2,
+	// except in batch 3, where nothing is stamped and there is no cover.
+	for seq := 1; seq <= 7; seq++ {
+		out := f.create(t, 2)
+		_ = f.svc.DB.SetPhotoFailed(ctx, out.Photos[0].ID, "stamp", "processing_failed", now)
+		if seq == 3 {
+			_ = f.svc.DB.SetPhotoFailed(ctx, out.Photos[1].ID, "upload", "upload_failed", now)
+			continue
+		}
+		_ = f.svc.DB.SetPhotoStamped(ctx, out.Photos[1].ID, StampedKey(out.ID, out.Photos[1].ID), now)
+	}
+
+	var seqs []int64
+	var before int64
+	pages := 0
+	for {
+		page, err := f.svc.List(ctx, 3, before)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pages++
+		for _, b := range page.Batches {
+			seqs = append(seqs, b.Seq)
+			if b.Seq == 3 {
+				if b.CoverPhotoID != nil || b.StampedCount != 0 || b.FailedCount != 2 || !b.Finished {
+					t.Fatalf("batch 3 %+v", b)
+				}
+				continue
+			}
+			if b.CoverPhotoID == nil || b.StampedCount != 1 || b.FailedCount != 1 {
+				t.Fatalf("batch %d %+v", b.Seq, b)
+			}
+			detail, _ := f.svc.Get(ctx, b.ID)
+			if *b.CoverPhotoID != detail.Photos[1].ID {
+				t.Fatalf("batch %d cover %s, want photo 2", b.Seq, *b.CoverPhotoID)
+			}
+		}
+		if page.NextBefore == nil {
+			break
+		}
+		if *page.NextBefore != seqs[len(seqs)-1] {
+			t.Fatalf("nextBefore %d, last seq %d", *page.NextBefore, seqs[len(seqs)-1])
+		}
+		before = *page.NextBefore
+	}
+	if pages != 3 || fmt.Sprint(seqs) != "[7 6 5 4 3 2 1]" {
+		t.Fatalf("%d pages, seqs %v", pages, seqs)
+	}
+
+	// A page that ends exactly at the last batch has no next page.
+	page, err := f.svc.List(ctx, 7, 0)
+	if err != nil || len(page.Batches) != 7 || page.NextBefore != nil {
+		t.Fatalf("exact page %+v %v", page.NextBefore, err)
+	}
+	// Nothing older than the first batch.
+	page, err = f.svc.List(ctx, 3, 1)
+	if err != nil || len(page.Batches) != 0 || page.NextBefore != nil {
+		t.Fatalf("empty page %+v %v", page, err)
 	}
 }
 
