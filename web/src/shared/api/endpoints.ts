@@ -29,6 +29,7 @@ export const api = {
     request('/api/batches', { method: 'POST', body: input, schema: createdBatchSchema }),
   batch: (id: string, signal?: AbortSignal): Promise<Batch> =>
     request(`/api/batches/${encodeURIComponent(id)}`, { schema: batchSchema, signal }),
+  deleteBatch: (id: string) => request(`/api/batches/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 
   confirmUploaded: (photoId: string) =>
     request(`/api/photos/${encodeURIComponent(photoId)}/uploaded`, { method: 'POST' }),

@@ -3,7 +3,8 @@ import { Link, type LinkProps } from 'react-router';
 import { Icon, Spinner, type IconName } from './Icon';
 import styles from './Button.module.css';
 
-export type ButtonVariant = 'primary' | 'outline' | 'outlineMd' | 'outlineSmall' | 'text' | 'iconOnly';
+export type ButtonVariant =
+  'primary' | 'danger' | 'outline' | 'outlineMd' | 'outlineSmall' | 'text' | 'textDanger' | 'iconOnly';
 
 interface CommonProps {
   variant?: ButtonVariant;

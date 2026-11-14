@@ -175,6 +175,38 @@ test.describe('lote', () => {
     expect(shared[0]?.[0]).toMatch(/^nethstore-\d{3}-001\.jpg$/);
   });
 
+  test('Apagar lote asks first, removes the batch and goes back to a new one', async ({
+    page,
+    snap,
+    checkA11y,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'pixel7-390', 'full flow runs at 390 px');
+    await page.goto('/estudio');
+    await fillBatch(page, await syntheticPhotos(page, 2));
+    await page.getByRole('button', { name: 'Processar 2 fotos' }).click();
+    await waitForReady(page);
+    const batchUrl = page.url();
+    const batchId = new URL(batchUrl).pathname.split('/').pop() ?? '';
+
+    await page.getByRole('button', { name: 'Apagar lote' }).click();
+    const sheet = page.getByRole('dialog', { name: 'Apagar este lote?' });
+    await expect(sheet).toContainText('As 2 fotos deste lote saem do Estúdio');
+    await sheet.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+    await snap('apagar-lote');
+    await checkA11y('apagar lote');
+    await sheet.getByRole('button', { name: 'Apagar', exact: true }).click();
+
+    await expect(page).toHaveURL(/\/estudio$/);
+    await expect(page.getByText('Lote apagado.')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await snap('lote-apagado');
+    if (!MOCK) {
+      expect((await page.request.get(`/api/batches/${batchId}`)).status()).toBe(404);
+    }
+    await page.goto(batchUrl);
+    await expect(page.getByText('Este lote já não existe.')).toBeVisible();
+  });
+
   test('continue with the photos that worked', async ({ page, snap }, testInfo) => {
     test.skip(testInfo.project.name !== 'pixel7-390', 'full flow runs at 390 px');
     test.skip(MOCK, 'page.route cannot see requests handled by the mock service worker');

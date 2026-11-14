@@ -35,6 +35,16 @@ describe('CreateBatchPage', () => {
     expect(screen.getByText('escolhe fotos, preço e tamanhos')).toBeInTheDocument();
   });
 
+  it('after Apagar lote, says the batch is gone until photos are picked', async () => {
+    const user = userEvent.setup();
+    renderAt(<CreateBatchPage />, { path: '/estudio', state: { batchDeleted: true } });
+    const notice = screen.getByText('Lote apagado.').closest('[role="status"]');
+    expect(notice).toHaveTextContent('As fotos que guardaste na galeria do telemóvel continuam lá.');
+
+    await user.upload(screen.getByTestId('gallery-input'), photos(1));
+    expect(screen.queryByText('Lote apagado.')).not.toBeInTheDocument();
+  });
+
   it('flags the missing price, formats it while typing and enables Processar', async () => {
     const user = userEvent.setup();
     renderAt(<CreateBatchPage />, { path: '/estudio' });

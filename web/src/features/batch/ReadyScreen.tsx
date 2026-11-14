@@ -18,6 +18,7 @@ import { Banner } from '../../shared/ui/Banner';
 import { Button } from '../../shared/ui/Button';
 import { StatusIcon } from '../../shared/ui/Icon';
 import { PhotoTile } from '../../shared/ui/PhotoTile';
+import { DeleteBatchSheet } from './DeleteBatchSheet';
 import { PhotoViewer } from './PhotoViewer';
 import type { EffectivePhoto } from './processingView';
 import styles from './BatchPage.module.css';
@@ -30,6 +31,8 @@ interface ReadyScreenProps {
   retrying: boolean;
   onRetryFailed: () => void;
   onNewGroup: () => void;
+  /** The batch is gone from the server (after "Apagar lote"). */
+  onDeleted: () => void;
 }
 
 /** Search parameter with the number of the photo open in the viewer, so "back" closes it. */
@@ -54,6 +57,7 @@ export function ReadyScreen({
   retrying,
   onRetryFailed,
   onNewGroup,
+  onDeleted,
 }: ReadyScreenProps) {
   const files = useRef(new Map<string, Promise<File>>());
   const [prepared, setPrepared] = useState<ReadonlySet<string>>(() => new Set());
@@ -69,6 +73,7 @@ export function ReadyScreen({
   const [sharingAll, setSharingAll] = useState(false);
   const [prepareFailed, setPrepareFailed] = useState(false);
   const [shareOffset, setShareOffset] = useState(0);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const fileOf = useCallback(
     (photo: EffectivePhoto) => {
@@ -325,6 +330,19 @@ export function ReadyScreen({
 
       {feedback ? <Banner tone="error" icon="info" title={feedback} className={styles.feedback} /> : null}
 
+      <div className={styles.deleteRow}>
+        <Button
+          variant="textDanger"
+          icon="trash"
+          iconSize={16}
+          onClick={() => setDeleteOpen(true)}
+          // Not while photos are being fetched one by one for the gallery.
+          disabled={saving !== null || sharingAll}
+        >
+          {t.ready.delete}
+        </Button>
+      </div>
+
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <Button
@@ -352,6 +370,14 @@ export function ReadyScreen({
           </div>
         </div>
       </footer>
+
+      <DeleteBatchSheet
+        open={deleteOpen}
+        batchId={batch.id}
+        photoCount={total}
+        onClose={() => setDeleteOpen(false)}
+        onDeleted={onDeleted}
+      />
 
       <PhotoViewer
         photos={ready}

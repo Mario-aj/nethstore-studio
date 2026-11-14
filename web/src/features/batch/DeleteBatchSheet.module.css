@@ -1,0 +1,31 @@
+/* Folha "Apagar este lote?" (DECISOES.md, "Apagar lote"). */
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: var(--weight-light);
+  letter-spacing: -0.02em;
+}
+
+.body {
+  font-size: var(--text-body);
+  color: var(--color-text-soft);
+}
+
+.error {
+  font-size: var(--text-note);
+  color: var(--color-error-text);
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.actions > * {
+  flex: 1 1 0;
+}

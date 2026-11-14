@@ -87,7 +87,7 @@ function batchOf(ready: EffectivePhoto[]): Batch {
   };
 }
 
-function renderReady(count: number) {
+function renderReady(count: number, { onDeleted = () => undefined }: { onDeleted?: () => void } = {}) {
   const ready = Array.from({ length: count }, (_, i) => photo(i + 1));
   return renderAt(
     <ReadyScreen
@@ -98,6 +98,7 @@ function renderReady(count: number) {
       retrying={false}
       onRetryFailed={() => undefined}
       onNewGroup={() => undefined}
+      onDeleted={onDeleted}
     />,
     { path: '/estudio/lotes/b1' },
   );
@@ -212,5 +213,80 @@ describe('ReadyScreen Guardar todas', () => {
     ).toBeInTheDocument();
     expect(click).toHaveBeenCalledTimes(2);
     expect(share).not.toHaveBeenCalled();
+  });
+});
+
+describe('ReadyScreen Apagar lote', () => {
+  /** DELETE /api/batches/:id answering `status` (with an error body when it is not 204). */
+  function deleteEndpoint(status: number, code = 'internal') {
+    const calls: string[] = [];
+    server.use(
+      http.delete('/api/batches/:id', ({ params }) => {
+        calls.push(String(params.id));
+        return status === 204
+          ? new HttpResponse(null, { status })
+          : HttpResponse.json({ error: { code } }, { status });
+      }),
+    );
+    return calls;
+  }
+
+  it('asks first, then deletes the batch on the server', async () => {
+    setDevice('android');
+    const calls = deleteEndpoint(204);
+    const onDeleted = vi.fn();
+    const user = userEvent.setup();
+    renderReady(3, { onDeleted });
+
+    await user.click(screen.getByRole('button', { name: 'Apagar lote' }));
+    const sheet = screen.getByRole('dialog', { name: 'Apagar este lote?' });
+    expect(sheet).toHaveTextContent('As 3 fotos deste lote saem do Estúdio');
+    expect(sheet).toHaveTextContent('As que já guardaste na galeria do telemóvel continuam lá.');
+    expect(calls).toEqual([]);
+
+    await user.click(screen.getByRole('button', { name: 'Apagar' }));
+    await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual(['b1']);
+  });
+
+  it('Cancelar keeps the batch', async () => {
+    setDevice('android');
+    const calls = deleteEndpoint(204);
+    const onDeleted = vi.fn();
+    const user = userEvent.setup();
+    renderReady(2, { onDeleted });
+
+    await user.click(screen.getByRole('button', { name: 'Apagar lote' }));
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(calls).toEqual([]);
+    expect(onDeleted).not.toHaveBeenCalled();
+  });
+
+  it('a failed delete says so and keeps the sheet open', async () => {
+    setDevice('android');
+    deleteEndpoint(500);
+    const onDeleted = vi.fn();
+    const user = userEvent.setup();
+    renderReady(2, { onDeleted });
+
+    await user.click(screen.getByRole('button', { name: 'Apagar lote' }));
+    await user.click(screen.getByRole('button', { name: 'Apagar' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não deu para apagar o lote.');
+    expect(screen.getByRole('dialog', { name: 'Apagar este lote?' })).toBeInTheDocument();
+    expect(onDeleted).not.toHaveBeenCalled();
+  });
+
+  it('a batch that is already gone counts as deleted', async () => {
+    setDevice('android');
+    deleteEndpoint(404, 'not_found');
+    const onDeleted = vi.fn();
+    const user = userEvent.setup();
+    renderReady(1, { onDeleted });
+
+    await user.click(screen.getByRole('button', { name: 'Apagar lote' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('A foto deste lote sai do Estúdio');
+    await user.click(screen.getByRole('button', { name: 'Apagar' }));
+    await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1));
   });
 });

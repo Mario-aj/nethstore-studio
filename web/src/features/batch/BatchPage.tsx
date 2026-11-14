@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { isApiError } from '../../shared/api/client';
@@ -23,6 +23,7 @@ const RECONNECTED_BANNER_MS = 5000;
 export default function BatchPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const mode = useDeployMode();
   const snapshot = useUploads();
   const batchUploads = snapshot.batches[id];
@@ -120,6 +121,11 @@ export default function BatchPage() {
   const view = processingView({ batch, uploads: batchUploads, paused: snapshot.paused, mode, accepted });
   const label = <HeaderLabel>{t.processing.header(formatShortDate(new Date(batch.createdAt)))}</HeaderLabel>;
   const newGroup = () => void navigate('/estudio');
+  // The batch page no longer exists: replace it in the history, so "back" does not land on it.
+  const onDeleted = () => {
+    void navigate('/estudio', { replace: true, state: { batchDeleted: true } });
+    queryClient.removeQueries({ queryKey: queryKeys.batch(id) });
+  };
 
   const retryFailed = () => {
     const failed = view.failed;
@@ -173,6 +179,7 @@ export default function BatchPage() {
           retrying={retry.isPending}
           onRetryFailed={retryFailed}
           onNewGroup={newGroup}
+          onDeleted={onDeleted}
         />
       ) : (
         <ProcessingScreen

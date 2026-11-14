@@ -28,6 +28,26 @@
   background: #e0c28a;
 }
 
+/* Confirmação de uma ação que não se desfaz (apagar lote). */
+.danger {
+  height: var(--button-h);
+  padding: 0 24px;
+  background: var(--color-error-soft);
+  border-color: var(--color-error-line);
+  color: var(--color-error-text);
+  font-size: var(--text-action);
+}
+
+.danger:not(:disabled):hover {
+  border-color: var(--color-error);
+}
+
+.danger[aria-busy='true']:disabled {
+  background: var(--color-error-soft);
+  border-color: var(--color-error-line);
+  color: var(--color-error-text);
+}
+
 .outline {
   height: var(--button-h);
   padding: 0 24px;
@@ -69,6 +89,15 @@
   gap: 4px;
 }
 
+.textDanger {
+  height: var(--tap-min);
+  padding: 0 12px;
+  background: transparent;
+  color: var(--color-error-text);
+  font-size: 14px;
+  gap: 6px;
+}
+
 .iconOnly {
   width: var(--tap-min);
   height: var(--tap-min);
@@ -91,6 +120,7 @@
 }
 
 .text:disabled,
+.textDanger:disabled,
 .iconOnly:disabled {
   background: transparent;
 }

@@ -163,6 +163,8 @@ export const t = {
     process: 'Processar fotos',
     processN: (n: number) => `Processar ${n} ${plural(n, 'foto', 'fotos')}`,
     creating: 'A criar o lote',
+    batchDeleted: 'Lote apagado.',
+    batchDeletedHint: 'As fotos que guardaste na galeria do telemóvel continuam lá.',
   },
 
   sheet: {
@@ -247,6 +249,15 @@ export const t = {
     saveNext: (n: number) => `Guardar as próximas ${n}`,
     saveInGroups: 'O telemóvel não aceitou todas de uma vez. Toca outra vez para guardar de 10 em 10.',
     newGroup: 'Novo grupo',
+    delete: 'Apagar lote',
+    deleteTitle: 'Apagar este lote?',
+    deleteBody: (n: number) =>
+      n === 1
+        ? 'A foto deste lote sai do Estúdio e não dá para a recuperar. Se já a guardaste na galeria do telemóvel, continua lá.'
+        : `As ${n} fotos deste lote saem do Estúdio e não dá para as recuperar. As que já guardaste na galeria do telemóvel continuam lá.`,
+    deleteConfirm: 'Apagar',
+    deleteCancel: 'Cancelar',
+    deleteFailed: 'Não deu para apagar o lote. Tenta outra vez.',
   },
   viewer: {
     label: 'Pré-visualização',

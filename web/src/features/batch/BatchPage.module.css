@@ -251,6 +251,13 @@
   display: none;
 }
 
+/* "Apagar lote": discreto, no fim da tela Pronto, longe dos botões do rodapé. */
+.deleteRow {
+  display: flex;
+  justify-content: center;
+  margin: 28px 20px 0;
+}
+
 /* Miniatura da grelha Pronto: abre a pré-visualização. */
 .tileButton {
   display: block;

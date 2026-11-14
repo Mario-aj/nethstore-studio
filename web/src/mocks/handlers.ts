@@ -253,6 +253,15 @@ export const handlers = [
     return HttpResponse.json(batchJson(batch));
   }),
 
+  http.delete('/api/batches/:id', async ({ params }) => {
+    if (!state.loggedIn) return unauthenticated();
+    await delay(300);
+    if (!state.batches.delete(String(params.id))) {
+      return HttpResponse.json({ error: { code: 'not_found' } }, { status: 404 });
+    }
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   http.post('/s3/estudio', async () => {
     state.uploads += 1;
     const n = state.uploads;

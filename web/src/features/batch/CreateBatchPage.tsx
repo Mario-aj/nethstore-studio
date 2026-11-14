@@ -38,6 +38,14 @@ export default function CreateBatchPage() {
   const showAll = location.hash === '#todas';
   const view = batchFormView({ photos: photos.length, price, sizes, description });
 
+  // Coming from "Apagar lote": say it once, then drop the flag from the history entry
+  // so a reload does not repeat it. The notice goes away when photos are picked.
+  const arrivedFromDelete = (location.state as { batchDeleted?: unknown } | null)?.batchDeleted === true;
+  const [batchDeleted] = useState(arrivedFromDelete);
+  useEffect(() => {
+    if (arrivedFromDelete) void navigate('.', { replace: true, state: null });
+  }, [arrivedFromDelete, navigate]);
+
   // Local previews are revoked on removal and when leaving the screen (SPEC 11.3).
   const previewUrls = useRef(new Set<string>());
   useEffect(() => {
@@ -209,6 +217,18 @@ export default function CreateBatchPage() {
         <p className={styles.eyebrow}>{t.create.eyebrow(today)}</p>
         <h1 className={styles.title}>{t.create.title}</h1>
       </div>
+
+      {batchDeleted && photos.length === 0 ? (
+        <Banner
+          tone="success"
+          icon="check"
+          title={t.create.batchDeleted}
+          className={styles.notice}
+          role="status"
+        >
+          {t.create.batchDeletedHint}
+        </Banner>
+      ) : null}
 
       {photos.length === 0 ? (
         <div className={styles.empty}>
