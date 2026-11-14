@@ -57,4 +57,26 @@ export function canShareFiles(): boolean {
 
 export const SHARE_GROUP = 10;
 
+/** iPhone or iPad, whatever the browser (they all run WebKit). iPadOS reports a Mac with touch. */
+export function isAppleTouchDevice(
+  nav: Pick<Navigator, 'userAgent' | 'maxTouchPoints'> = navigator,
+): boolean {
+  return (
+    /iPhone|iPad|iPod/.test(nav.userAgent) || (/Macintosh/.test(nav.userAgent) && nav.maxTouchPoints > 1)
+  );
+}
+
+/**
+ * How "Guardar" reaches the gallery. iOS turns every `<a download>` into a separate
+ * preview screen and files land in Files, not Photos; its share sheet instead saves
+ * many images to Photos in one tap ("Guardar imagens"). Elsewhere downloads work.
+ */
+export type SaveMode = 'download' | 'share';
+
+export function saveMode(): SaveMode {
+  return isAppleTouchDevice() && canShareFiles() ? 'share' : 'download';
+}
+
+export const isAbort = (error: unknown) => error instanceof DOMException && error.name === 'AbortError';
+
 export const delay = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));

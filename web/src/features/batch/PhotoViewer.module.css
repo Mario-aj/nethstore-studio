@@ -1,0 +1,149 @@
+/* Visualizador de ecrã inteiro da tela Pronto (DECISOES.md, "Pré-visualização"). */
+.viewer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+.viewer[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.viewer::backdrop {
+  background: var(--color-bg);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(8px + env(safe-area-inset-top)) 12px 8px 20px;
+}
+
+.counter {
+  font-size: var(--text-body);
+  color: var(--color-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.iconButton,
+.nav {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.iconButton {
+  border: 0;
+  background: transparent;
+}
+
+.iconButton:focus-visible,
+.nav:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.stage {
+  position: relative;
+  min-height: 0;
+}
+
+.track {
+  height: 100%;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.track:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.slide {
+  position: relative;
+  flex: 0 0 100%;
+  height: 100%;
+  margin: 0;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+
+.image {
+  position: absolute;
+  top: 0;
+  left: 12px;
+  width: calc(100% - 24px);
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.full {
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+
+.loaded {
+  opacity: 1;
+}
+
+.nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  border: var(--line) solid var(--color-line-strong);
+  background: var(--color-scrim);
+}
+
+.prev {
+  left: 8px;
+}
+
+.next {
+  right: 8px;
+}
+
+.nav:disabled {
+  visibility: hidden;
+}
+
+.bottom {
+  border-top: var(--line) solid var(--color-line);
+}
+
+.bottomInner {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 12px 20px calc(16px + env(safe-area-inset-bottom));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .full {
+    transition: none;
+  }
+}

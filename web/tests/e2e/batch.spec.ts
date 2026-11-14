@@ -2,6 +2,9 @@ import type { Page } from '@playwright/test';
 import { MOCK } from '../../playwright.config';
 import { expect, expectNoHorizontalOverflow, fillBatch, syntheticPhotos, test } from './fixtures';
 
+const IPHONE_UA =
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1';
+
 async function waitForReady(page: Page) {
   // exact: the processing screen also has a "JÁ PRONTAS · N" heading.
   await expect(page.getByRole('heading', { name: 'Prontas', exact: true })).toBeVisible({ timeout: 90_000 });
@@ -57,18 +60,38 @@ test.describe('lote', () => {
     await waitForReady(page);
     await expect(page.getByText(`de ${count} fotos carimbadas`)).toBeVisible();
     const grid = page.getByRole('list', { name: 'Fotos carimbadas' });
-    await expect(grid.getByRole('img')).toHaveCount(count);
+    await expect(grid.getByRole('button', { name: /^Ver foto \d+$/ })).toHaveCount(count);
     // Every thumbnail actually loaded.
     await expect
       .poll(() =>
         grid
-          .getByRole('img')
+          .locator('img')
           .evaluateAll((imgs) => imgs.every((i) => (i as HTMLImageElement).naturalWidth > 0)),
       )
       .toBe(true);
     await expectNoHorizontalOverflow(page);
     await snap('pronto');
     await checkA11y('pronto');
+
+    // Pré-visualização: opens on the tapped photo, a swipe goes to the next, back closes it.
+    await grid.getByRole('button', { name: 'Ver foto 1', exact: true }).click();
+    const viewer = page.getByRole('dialog', { name: 'Pré-visualização' });
+    await expect(viewer).toBeVisible();
+    await expect(viewer.getByText(`1 de ${count}`)).toBeVisible();
+    await expect(page).toHaveURL(/\?foto=1$/);
+    const fullImage = viewer.getByRole('img', { name: 'Foto 1, carimbada' });
+    await expect(fullImage).toHaveJSProperty('complete', true);
+    await expect(fullImage).not.toHaveJSProperty('naturalWidth', 0);
+    // A swipe is a native horizontal scroll of the strip, snapped to one photo.
+    await page.getByTestId('viewer-track').evaluate((el) => el.scrollBy({ left: el.clientWidth }));
+    await expect(viewer.getByText(`2 de ${count}`)).toBeVisible();
+    await expect(page).toHaveURL(/\?foto=2$/);
+    await expect(viewer.getByRole('img', { name: 'Foto 2, carimbada' })).toBeVisible();
+    await snap('pre-visualizacao');
+    await checkA11y('pré-visualização');
+    await page.goBack();
+    await expect(viewer).toBeHidden();
+    await expect(page).toHaveURL(/\/estudio\/lotes\/[\w-]+$/);
 
     if (full && !MOCK) {
       const download = page.waitForEvent('download');
@@ -122,6 +145,34 @@ test.describe('lote', () => {
     await waitForReady(page);
     await expect(page.getByText('de 4 fotos carimbadas')).toBeVisible();
     await expect(page.getByRole('list', { name: 'Fotos carimbadas' }).getByRole('img')).toHaveCount(4);
+  });
+
+  test('on iPhone, Guardar todas sends every photo to one share sheet', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'pixel7-390', 'full flow runs at 390 px');
+    // Chromium standing in for iOS: iPhone user agent and a Web Share that records what it got.
+    await page.addInitScript((ua) => {
+      const shared: string[][] = [];
+      Object.assign(window, { __shared: shared });
+      Object.defineProperty(navigator, 'userAgent', { get: () => ua });
+      Object.defineProperty(navigator, 'canShare', { value: () => true });
+      Object.defineProperty(navigator, 'share', {
+        value: (data: ShareData) => {
+          shared.push((data.files ?? []).map((f) => f.name));
+          return Promise.resolve();
+        },
+      });
+    }, IPHONE_UA);
+
+    await page.goto('/estudio');
+    await fillBatch(page, await syntheticPhotos(page, 4));
+    await page.getByRole('button', { name: 'Processar 4 fotos' }).click();
+    await waitForReady(page);
+    await page.getByRole('button', { name: 'Guardar todas na galeria' }).click();
+    await expect(page.getByRole('button', { name: 'Guardadas na galeria' })).toBeVisible();
+    const shared = await page.evaluate(() => (window as unknown as { __shared: string[][] }).__shared);
+    expect(shared).toHaveLength(1);
+    expect(shared[0]).toHaveLength(4);
+    expect(shared[0]?.[0]).toMatch(/^nethstore-\d{3}-001\.jpg$/);
   });
 
   test('continue with the photos that worked', async ({ page, snap }, testInfo) => {
