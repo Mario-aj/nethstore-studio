@@ -1,0 +1,89 @@
+# CI pronto para quando o repositório tiver remoto no GitHub (docs/DECISOES.md, item 11).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: api/go.mod
+          cache-dependency-path: api/go.sum
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.2
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: make check
+
+  integration:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: api/go.mod
+          cache-dependency-path: api/go.sum
+      - run: make test-integration
+
+  e2e:
+    runs-on: ubuntu-24.04
+    needs: [check]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.2
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: DEPLOY_MODE=lan LAN_HOST=localhost make init
+      - run: make up
+      - run: cd web && pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium
+      - run: make e2e
+      - run: make security-check
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screens
+          path: artifacts/screens
+          retention-days: 7
+
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: api/go.mod
+          cache-dependency-path: api/go.sum
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.2
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: cd web && pnpm install --frozen-lockfile
+      - run: make audit
