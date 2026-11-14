@@ -17,7 +17,7 @@ Este ficheiro registra o que mudou ou foi decidido além do que está em `docs/S
 8. **Fotos reais da loja** só como assets da landing e da Entrada, extraídas do design e convertidas para WebP. Testes e imagens golden usam apenas imagens sintéticas.
 9. **Indexação.** A landing (`/`) é indexável. `/entrar`, `/estudio/*` e qualquer outro caminho recebem `X-Robots-Tag: noindex` do Caddy. `robots.txt` bloqueia só `/api` e `/s3`; `sitemap.xml` lista só `/`. `index.html` tem título, descrição e Open Graph com a foto do hero; as URLs absolutas vêm de `APP_ORIGIN` no build da imagem.
 10. **QA** com a skill `qa-criterios`, critérios tirados da SPEC 18 e das tabelas de estados da spec do frontend, contra a stack local. Relatório em `docs/QA-REPORT.md`, sem Jira.
-11. **Repositório**: a raiz é a própria pasta `nethstore-studio` (a SPEC chama-a `estudio/`). Sem remoto. Há um workflow de CI em `.github/workflows/ci.yml` pronto para quando existir.
+11. **Repositório**: a raiz é a própria pasta `nethstore-studio` (a SPEC chama-a `estudio/`). Remoto no GitHub (`Mario-aj/nethstore-studio`) desde 14/11/2026. O CI (`.github/workflows/ci.yml`) corre em cada pull request e em cada push para `main`: `make check`, `make test-integration`, `make e2e` com `make security-check` numa stack descartável, e `make audit`.
 12. O ficheiro `docs/NethStore Estúdio especificação do frontend.md` passou a chamar-se `docs/FRONTEND-SPEC.md` (sem espaços nem acentos, mais fácil de referenciar em scripts e links).
 
 ## Acréscimos ao contrato da API

@@ -80,7 +80,9 @@ Revisitar quando o `vite-plugin-pwa` e o `eslint` atualizarem as dependências.
 * **Teste de 50 fotos**: corre nos testes Go com imagens de 300×400 (rápido com `-race`). O e2e usa 12 imagens; a integração usa 4 de 1200×1600.
 * **Cobertura do web** está em cerca de 60 %; a SPEC não define mínimo para o web.
 
-## Validar no telemóvel real (SPEC 20, não marcado como feito)
+## Validar no telemóvel real (SPEC 20)
+
+Validado no telemóvel pelo dono do projeto em 14/11/2026: tudo conforme. A loja usa o Estúdio desde esse dia. Lista do que foi confirmado:
 
 * O Chrome do Android aceita a CA local e trata `https://LAN_HOST` como contexto seguro: instalação da PWA, área de transferência ("Colar"), Wake Lock e partilha.
 * Limite de quantidade e tamanho no `navigator.share` com 10 fotos de cerca de 600 KB (a app partilha em grupos de 10).
@@ -88,5 +90,6 @@ Revisitar quando o `vite-plugin-pwa` e o `eslint` atualizarem as dependências.
 * `capture="environment"` abre a câmara traseira.
 * Tempo real de envio de 50 fotos pela rede de casa.
 * Legibilidade do carimbo em fotos reais claras e escuras (ajustar `stamp.Layout` se preciso).
-* Capturas de ecrã do passo a passo da CA para `docs/INSTALAR-NO-TELEMOVEL.md`.
 * Ícone maskable e ecrã de arranque da PWA no lançador do Android.
+
+Fica por fazer só a parte de documentação: as capturas de ecrã do passo a passo da CA em `docs/INSTALAR-NO-TELEMOVEL.md` (o guia descreve o caminho em texto).
