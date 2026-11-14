@@ -68,6 +68,8 @@ Esta variante não foi testada. Prefira o modo `public` com portas abertas sempr
 | Trocar a chave de acesso | `make secret` (revoga todas as sessões) |
 | Ver sessões ativas | `make sessions-list` |
 | Revogar sessões (telemóvel perdido) | `make sessions-revoke`, depois `make secret` |
+| Apagar um lote | Botão "Apagar lote" no fim da tela Prontas, no app |
+| Apagar todos os lotes e fotos | `make reset-data` (ver abaixo) |
 
 ## Telemóvel perdido ou chave exposta
 
@@ -82,6 +84,19 @@ Esta variante não foi testada. Prefira o modo `public` com portas abertas sempr
   * `SHA256SUMS`.
 * Copie a pasta `backups/` para fora do computador (disco externo, nuvem pessoal). O backup contém as fotos da loja.
 * `make restore DATE=AAAA-MM-DD` confere os checksums, pede confirmação (escrever `RESTAURAR`) e substitui os dados atuais.
+
+## Apagar tudo e começar do zero
+
+`make reset-data` pede confirmação (escrever `APAGAR`) e depois:
+
+1. Para a stack.
+2. Esvazia os volumes `api-data` (base de dados) e `garage-meta`/`garage-data` (fotos).
+3. Volta a inicializar o Garage (layout, bucket e chave da API a partir do `.env`) e sobe a stack.
+4. Gera uma chave de acesso nova e mostra-a uma vez. A chave antiga e as sessões deixam de valer, por isso o telemóvel volta a pedir a chave.
+
+Não mexe no `.env`, no volume `caddy-data` (a CA local, então não é preciso reinstalar o certificado no telemóvel) nem na pasta `backups/`. Se quiser uma cópia antes, corra `make backup`.
+
+Não apague só um dos volumes à mão: a base de dados e o Garage ficam dessincronizados.
 
 ## Retenção automática
 

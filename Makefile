@@ -66,6 +66,10 @@ backup: ## Cópia consistente do SQLite e do Garage em backups/AAAA-MM-DD/
 restore: ## Restaura um backup: make restore DATE=AAAA-MM-DD
 	@COMPOSE="$(COMPOSE)" scripts/restore.sh "$(DATE)"
 
+.PHONY: reset-data
+reset-data: ## Apaga todos os lotes, as fotos e a chave de acesso (pede confirmação)
+	@COMPOSE="$(COMPOSE)" scripts/reset-data.sh
+
 # --- qualidade ------------------------------------------------------------------
 
 .PHONY: check

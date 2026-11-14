@@ -80,6 +80,7 @@ Este ficheiro registra o que mudou ou foi decidido além do que está em `docs/S
 * **Toolchain Go fixado em 1.26.11** (`toolchain` no `go.mod`): o 1.26.3 da máquina tinha vulnerabilidades conhecidas na biblioteca padrão, que o `govulncheck` apontava.
 * **Política POST pelo SDK.** O `PresignPostObject` do `aws-sdk-go-v2` funcionou contra o Garage 2.5.0, então não há assinador próprio. Os nomes `x-amz-*` vão em minúsculas nos campos, como no exemplo da SPEC.
 * **Garage 2.5.0** (última 2.x estável em 13/11/2026). A chave S3 da API é gerada pelo `make init` e importada com `garage key import`, o que torna o `garage-init.sh` idempotente sem precisar ler segredos da saída do Garage.
+* **`make reset-data` (pedido de 14/11/2026, fora da SPEC 13).** Apaga todos os lotes e fotos de uma vez: esvazia os volumes `api-data`, `garage-meta` e `garage-data`, volta a correr o `garage-init.sh` (só o `make up` não recria layout, bucket nem chave) e gera uma chave de acesso nova, porque a antiga vivia na base apagada. Mantém o `.env`, a CA do Caddy e os backups. Pede `APAGAR`, como o `make restore` pede `RESTAURAR`.
 * **Log do `/api/health`** a cada 10 s (health check do contêiner) vai em nível `debug`, para não encher o log.
 
 ## Frontend

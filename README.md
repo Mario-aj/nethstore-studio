@@ -43,6 +43,7 @@ Para experimentar nesta máquina: `DEPLOY_MODE=lan LAN_HOST=localhost make init 
 | `make up` / `make down` / `make logs` | Subir, parar, ver logs |
 | `make secret` | Nova chave de acesso (revoga todas as sessões) |
 | `make backup` / `make restore DATE=AAAA-MM-DD` | Backup e restauro |
+| `make reset-data` | Apaga todos os lotes, as fotos e a chave de acesso (pede confirmação) |
 | `make check` | Lint e testes unitários (Go e web) |
 | `make test-integration` | Testes Go contra um Garage real |
 | `make e2e` | Playwright contra a stack (troca a chave de acesso) |
