@@ -207,6 +207,49 @@ test.describe('lote', () => {
     await expect(page.getByText('Este lote já não existe.')).toBeVisible();
   });
 
+  test('Lotes lists a processed batch and opens it again', async ({ page, snap, checkA11y }, testInfo) => {
+    test.skip(testInfo.project.name !== 'pixel7-390', 'full flow runs at 390 px');
+    await page.goto('/estudio');
+    await fillBatch(page, await syntheticPhotos(page, 2), {
+      sizes: ['S'],
+      price: '7500',
+      description: 'Saia',
+    });
+    await page.getByRole('button', { name: 'Processar 2 fotos' }).click();
+    await waitForReady(page);
+    const batchPath = new URL(page.url()).pathname;
+
+    // After Processar, the back arrow opens the list (the iPhone app has no back button).
+    await page.getByRole('button', { name: 'Voltar aos lotes' }).click();
+    await expect(page).toHaveURL(/\/estudio\/lotes$/);
+    await expect(page.getByRole('heading', { name: 'Lotes', exact: true })).toBeVisible();
+    const row = page
+      .getByRole('region', { name: 'HOJE' })
+      .getByRole('link', { name: /^Saia\/ S/ })
+      .first();
+    await expect(row).toContainText('7.500 kz');
+    await expect(row).toContainText('2 fotos');
+    await expect
+      .poll(() => row.locator('img').evaluate((img) => (img as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
+    await expectNoHorizontalOverflow(page);
+    await snap('lotes');
+    await checkA11y('lotes');
+
+    await row.click();
+    await expect(page).toHaveURL(new RegExp(`${batchPath}$`));
+    await waitForReady(page);
+    await page.getByRole('button', { name: 'Voltar aos lotes' }).click();
+    await expect(page).toHaveURL(/\/estudio\/lotes$/);
+
+    // From a new batch, the header link opens the list too.
+    await page.getByRole('link', { name: 'Novo lote' }).first().click();
+    await expect(page.getByRole('heading', { name: 'Fotos e preço' })).toBeVisible();
+    await expect(page.getByLabel(/Descrição/)).toHaveValue('Veste');
+    await page.getByRole('link', { name: 'Lotes' }).click();
+    await expect(page).toHaveURL(/\/estudio\/lotes$/);
+  });
+
   test('continue with the photos that worked', async ({ page, snap }, testInfo) => {
     test.skip(testInfo.project.name !== 'pixel7-390', 'full flow runs at 390 px');
     test.skip(MOCK, 'page.route cannot see requests handled by the mock service worker');

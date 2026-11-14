@@ -76,6 +76,12 @@ const LINE: Record<string, ReactNode> = {
     </>
   ),
   compare: <path d="M9 7l-5 5 5 5M15 7l5 5-5 5" />,
+  stack: (
+    <>
+      <rect x="8" y="3.5" width="12.5" height="13" rx="2.5" />
+      <path d="M4.5 7.5v10a3 3 0 003 3h9" />
+    </>
+  ),
   trash: <path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 12.5h9l1-12.5M10 11v5M14 11v5" />,
 };
 

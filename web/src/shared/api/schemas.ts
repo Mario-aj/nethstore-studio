@@ -68,6 +68,30 @@ export const batchSchema = z.object({
 });
 export type Batch = z.infer<typeof batchSchema>;
 
+// GET /api/batches (DECISOES.md, "Acréscimos ao contrato da API").
+export const batchSummarySchema = z.object({
+  id: z.string(),
+  seq: z.number().int(),
+  priceKz: z.number().int(),
+  sizes: z.array(z.string()),
+  description: z.string().nullable(),
+  stampLine1: z.string(),
+  stampLine2: z.string(),
+  photoCount: z.number().int(),
+  stampedCount: z.number().int(),
+  failedCount: z.number().int(),
+  finished: z.boolean(),
+  createdAt: z.string(),
+  coverPhotoId: z.string().nullable(),
+});
+export type BatchSummary = z.infer<typeof batchSummarySchema>;
+
+export const batchPageSchema = z.object({
+  batches: z.array(batchSummarySchema),
+  nextBefore: z.number().int().nullable(),
+});
+export type BatchPage = z.infer<typeof batchPageSchema>;
+
 export const errorBodySchema = z.object({
   error: z.object({
     code: z.string(),

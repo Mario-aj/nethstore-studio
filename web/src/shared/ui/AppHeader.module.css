@@ -24,3 +24,19 @@
   letter-spacing: var(--tracking-label);
   color: var(--color-text-muted);
 }
+
+.withBack {
+  padding-left: 4px;
+}
+
+.lead {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

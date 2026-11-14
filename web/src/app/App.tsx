@@ -10,6 +10,7 @@ import styles from './App.module.css';
 
 const CreateBatchPage = lazy(() => import('../features/batch/CreateBatchPage'));
 const BatchPage = lazy(() => import('../features/batch/BatchPage'));
+const BatchesPage = lazy(() => import('../features/batch/BatchesPage'));
 
 export function AppRoutes() {
   return (
@@ -19,6 +20,7 @@ export function AppRoutes() {
         <Route path="/entrar" element={<LoginPage />} />
         <Route element={<RequireAuth />}>
           <Route path="/estudio" element={<CreateBatchPage />} />
+          <Route path="/estudio/lotes" element={<BatchesPage />} />
           <Route path="/estudio/lotes/:id" element={<BatchPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />

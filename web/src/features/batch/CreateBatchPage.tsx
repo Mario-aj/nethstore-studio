@@ -6,9 +6,9 @@ import { api } from '../../shared/api/endpoints';
 import { errorMessage, t } from '../../shared/i18n/pt-AO';
 import { formatPriceInput, formatShortDate, parsePriceInput } from '../../shared/lib/format';
 import { DESCRIPTION_MAX, type Size } from '../../shared/lib/stamp';
-import { AppHeader } from '../../shared/ui/AppHeader';
+import { AppHeader, HeaderActions } from '../../shared/ui/AppHeader';
 import { Banner } from '../../shared/ui/Banner';
-import { Button } from '../../shared/ui/Button';
+import { Button, LinkButton } from '../../shared/ui/Button';
 import { Icon, StatusIcon } from '../../shared/ui/Icon';
 import { PhotoTile } from '../../shared/ui/PhotoTile';
 import { addPhotos, batchFormView, MAX_PHOTOS, type LocalPhoto } from './createBatchForm';
@@ -136,14 +136,19 @@ export default function CreateBatchPage() {
 
   const header = (
     <AppHeader>
-      <Button
-        variant="iconOnly"
-        aria-label={t.common.logout}
-        onClick={() => logout.mutate()}
-        disabled={logout.isPending}
-      >
-        <Icon name="logout" size={20} />
-      </Button>
+      <HeaderActions>
+        <LinkButton to="/estudio/lotes" variant="text" icon="stack" iconSize={18}>
+          {t.batches.link}
+        </LinkButton>
+        <Button
+          variant="iconOnly"
+          aria-label={t.common.logout}
+          onClick={() => logout.mutate()}
+          disabled={logout.isPending}
+        >
+          <Icon name="logout" size={20} />
+        </Button>
+      </HeaderActions>
     </AppHeader>
   );
 

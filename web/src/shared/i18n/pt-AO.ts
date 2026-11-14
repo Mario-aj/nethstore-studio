@@ -169,6 +169,26 @@ export const t = {
     batchDeletedHint: 'As fotos que guardaste na galeria do telemóvel continuam lá.',
   },
 
+  batches: {
+    link: 'Lotes',
+    back: 'Voltar aos lotes',
+    eyebrow: 'HISTÓRICO',
+    title: 'Lotes',
+    listLabel: 'Lotes processados',
+    today: 'HOJE',
+    yesterday: 'ONTEM',
+    meta: (seq: number, photos: number) => `Lote ${seq} · ${photos} ${plural(photos, 'foto', 'fotos')}`,
+    processing: 'A processar',
+    failed: (n: number) => `${n} ${plural(n, 'falhou', 'falharam')}`,
+    noneReady: 'Nenhuma ficou pronta',
+    emptyTitle: 'Ainda não há lotes',
+    emptyBody: 'Os grupos que processares aparecem aqui.',
+    newBatch: 'Novo lote',
+    more: 'Ver lotes mais antigos',
+    loadFailed: 'Não deu para carregar os lotes.',
+    tryAgain: 'Tentar outra vez',
+  },
+
   sheet: {
     title: 'Tamanhos',
     subtitle: 'Escolhe um ou mais.',

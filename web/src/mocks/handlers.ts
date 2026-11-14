@@ -12,6 +12,9 @@
 //   sem-ligacao  3 uploads go through, then the network drops ("Sem ligação")
 //   aplicar      processing stops at 7 of 12 with one failure ("A aplicar")
 //   erro         the last photo fails in the stamp step ("Uma foto falhou")
+//   sem-lotes    no past batches in "Lotes" (empty state)
+//
+// Outside sem-lotes, "Lotes" starts with four past batches (seq 3 to 6), one with a failure.
 
 import { delay, http, HttpResponse } from 'msw';
 import beige from '../assets/photos/beige-dress-480.webp';
@@ -62,6 +65,58 @@ const state = {
 };
 
 const uuid = () => crypto.randomUUID();
+
+/** Past batches for "Lotes": already processed, spread over the last days. */
+function seedPastBatches() {
+  if (scenario() === 'sem-lotes') return;
+  const hour = 3_600_000;
+  const past = [
+    {
+      seq: 3,
+      ago: 72 * hour,
+      priceKz: 15000,
+      sizes: ['S', 'M', 'XL'],
+      description: 'Conjunto',
+      count: 8,
+      failed: [],
+    },
+    {
+      seq: 4,
+      ago: 26 * hour,
+      priceKz: 8000,
+      sizes: ['S', 'M'],
+      description: 'Veste',
+      count: 12,
+      failed: [5],
+    },
+    { seq: 5, ago: 25 * hour, priceKz: 2500, sizes: ['M'], description: null, count: 4, failed: [] },
+    { seq: 6, ago: 1 * hour, priceKz: 10000, sizes: ['M', 'L'], description: 'Veste', count: 12, failed: [] },
+  ];
+  for (const b of past) {
+    const at = Date.now() - b.ago;
+    const id = uuid();
+    state.batches.set(id, {
+      id,
+      seq: b.seq,
+      priceKz: b.priceKz,
+      sizes: b.sizes,
+      description: b.description,
+      createdAt: new Date(at).toISOString(),
+      photos: Array.from({ length: b.count }, (_, i) => {
+        const failed = (b.failed as number[]).includes(i + 1);
+        return {
+          id: uuid(),
+          position: i + 1,
+          uploadedAt: at,
+          failedStep: failed ? ('stamp' as const) : null,
+          errorCode: failed ? 'processing_failed' : null,
+          retriedAt: null,
+        };
+      }),
+    });
+  }
+}
+seedPastBatches();
 
 function slot(batchId: string, photoId: string) {
   return {
@@ -139,6 +194,25 @@ function batchJson(batch: MockBatch) {
       failedStep: p.failedStep,
       errorCode: p.errorCode,
     })),
+  };
+}
+
+function summaryJson(batch: MockBatch) {
+  const full = batchJson(batch);
+  return {
+    id: full.id,
+    seq: full.seq,
+    priceKz: full.priceKz,
+    sizes: full.sizes,
+    description: full.description,
+    stampLine1: full.stampLine1,
+    stampLine2: full.stampLine2,
+    photoCount: full.photoCount,
+    stampedCount: full.photos.filter((p) => p.status === 'stamped').length,
+    failedCount: full.failedCount,
+    finished: full.finished,
+    createdAt: full.createdAt,
+    coverPhotoId: full.photos.find((p) => p.status === 'stamped')?.id ?? null,
   };
 }
 
@@ -244,6 +318,21 @@ export const handlers = [
       },
       { status: 201 },
     );
+  }),
+
+  http.get('/api/batches', ({ request }) => {
+    if (!state.loggedIn) return unauthenticated();
+    const url = new URL(request.url);
+    const limit = Number(url.searchParams.get('limit') ?? '10');
+    const before = Number(url.searchParams.get('before') ?? '0');
+    const older = [...state.batches.values()]
+      .sort((a, b) => b.seq - a.seq)
+      .filter((b) => before <= 0 || b.seq < before);
+    const page = older.slice(0, limit);
+    return HttpResponse.json({
+      batches: page.map(summaryJson),
+      nextBefore: older.length > limit ? (page.at(-1)?.seq ?? null) : null,
+    });
   }),
 
   http.get('/api/batches/:id', ({ params }) => {
