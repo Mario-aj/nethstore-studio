@@ -129,5 +129,6 @@ export async function fillBatch(
   for (const size of sizes) await page.getByRole('button', { name: size, exact: true }).click();
   await page.getByRole('button', { name: 'Aplicar' }).click();
   await page.getByLabel('Preço').fill(price);
-  if (description) await page.getByLabel(/Descrição/).fill(description);
+  // Always filled: the field starts with "Veste", so '' means "no description".
+  await page.getByLabel(/Descrição/).fill(description);
 }

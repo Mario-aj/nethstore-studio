@@ -58,7 +58,8 @@ describe('CreateBatchPage', () => {
     const price = screen.getByLabelText('Preço');
     await user.type(price, '10000');
     expect(price).toHaveValue('10.000');
-    await user.type(screen.getByLabelText(/Descrição/), 'Veste');
+    // "Veste" is already written in a new batch.
+    expect(screen.getByLabelText(/Descrição/)).toHaveValue('Veste');
     expect(screen.getByText('5/24')).toBeInTheDocument();
     expect(screen.getByText('Veste/ M e L')).toBeInTheDocument();
     expect(screen.getByText('10.000 kz')).toBeInTheDocument();
@@ -82,13 +83,40 @@ describe('CreateBatchPage', () => {
     await user.upload(screen.getByTestId('gallery-input'), photos(3));
     await chooseSizes(user, ['L', 'M']);
     await user.type(screen.getByLabelText('Preço'), '10000');
-    await user.type(screen.getByLabelText(/Descrição/), ' Veste ');
+    const description = screen.getByLabelText(/Descrição/);
+    await user.clear(description);
+    await user.type(description, ' Conjunto ');
     await user.click(processButton());
     await waitFor(() => expect(start).toHaveBeenCalled());
-    expect(body).toEqual({ priceKz: 10000, sizes: ['M', 'L'], description: 'Veste', photoCount: 3 });
+    expect(body).toEqual({ priceKz: 10000, sizes: ['M', 'L'], description: 'Conjunto', photoCount: 3 });
     expect(start.mock.calls[0]?.[1]).toHaveLength(3);
     await waitFor(() =>
       expect(screen.getAllByTestId('location').at(-1)).toHaveTextContent('/estudio/lotes/b1'),
+    );
+  });
+
+  it('sends no description when the default Veste is erased', async () => {
+    let body: unknown;
+    vi.spyOn(uploads, 'start').mockImplementation(() => undefined);
+    server.use(
+      http.post('*/api/batches', async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(
+          { id: 'b2', seq: 8, stampLine1: 'M', stampLine2: '2.500 kz', photos: [] },
+          { status: 201 },
+        );
+      }),
+    );
+    const user = userEvent.setup();
+    renderAt(<CreateBatchPage />, { path: '/estudio' });
+    await user.upload(screen.getByTestId('gallery-input'), photos(1));
+    await chooseSizes(user, ['M']);
+    await user.type(screen.getByLabelText('Preço'), '2500');
+    await user.clear(screen.getByLabelText(/Descrição/));
+    expect(screen.getByText('0/24')).toBeInTheDocument();
+    await user.click(processButton());
+    await waitFor(() =>
+      expect(body).toEqual({ priceKz: 2500, sizes: ['M'], description: null, photoCount: 1 }),
     );
   });
 

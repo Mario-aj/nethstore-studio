@@ -106,6 +106,7 @@ Este ficheiro registra o que mudou ou foi decidido além do que está em `docs/S
 
 - Entrada, "Muitas tentativas": a chave escrita fica no campo (bloqueado), para poder entrar logo que a contagem acaba. O design mostra 0/32.
 - Fotos e preço: os tamanhos também são obrigatórios para "Processar" (a API exige 1 a 6). Sem tamanhos o rodapé mostra "falta o tamanho" em coral.
+- **Descrição padrão "Veste" (pedido de 14/11/2026).** Num lote novo o campo Descrição já vem com "Veste", a peça mais comum. Continua opcional: apagar o texto manda o lote sem descrição, e o carimbo fica só com os tamanhos. O valor está em `t.create.descriptionDefault`.
 - O rótulo PREÇO fica coral e aparece "Escreve o preço para processar." assim que há fotos e o preço está vazio (estado "Preço em falta").
 - A faixa de miniaturas rola na horizontal com todas as fotos (design) em vez do "+N na última" da SPEC.
 - "Ver todas" usa o hash `#todas`, para o botão voltar do Android fechar a grelha.

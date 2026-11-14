@@ -30,7 +30,7 @@ export default function CreateBatchPage() {
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
   const [price, setPrice] = useState<number | null>(null);
   const [sizes, setSizes] = useState<Size[]>([]);
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState<string>(t.create.descriptionDefault);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [leftOut, setLeftOut] = useState(0);
   const [today] = useState(() => formatShortDate(new Date()));

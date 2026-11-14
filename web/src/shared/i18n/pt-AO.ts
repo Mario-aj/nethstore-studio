@@ -153,6 +153,8 @@ export const t = {
     sizes: 'Tamanhos',
     sizesChoose: 'Escolher',
     description: 'Descrição · opcional',
+    /** Já vem escrita num lote novo: é a peça mais comum (pedido de 14/11/2026). */
+    descriptionDefault: 'Veste',
     descriptionPlaceholder: 'Veste, Conjunto, Saia',
     descriptionTooLong: 'A descrição tem no máximo 24 caracteres.',
     descriptionInvalid: "Usa só letras, números e . , ' ( ) & +",
