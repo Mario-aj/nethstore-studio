@@ -68,7 +68,8 @@ Esta variante não foi testada. Prefira o modo `public` com portas abertas sempr
 | Trocar a chave de acesso | `make secret` (revoga todas as sessões) |
 | Ver sessões ativas | `make sessions-list` |
 | Revogar sessões (telemóvel perdido) | `make sessions-revoke`, depois `make secret` |
-| Apagar um lote | Botão "Apagar lote" no fim da tela Prontas, no app |
+| Ver lotes antigos | Link "Lotes" no topo de "Fotos e preço", no app |
+| Apagar um lote | Abrir o lote (em "Lotes") e tocar em "Apagar lote", no fim da tela Prontas |
 | Apagar todos os lotes e fotos | `make reset-data` (ver abaixo) |
 
 ## Telemóvel perdido ou chave exposta

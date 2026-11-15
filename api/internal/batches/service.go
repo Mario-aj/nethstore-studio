@@ -251,23 +251,43 @@ type Summary struct {
 	FailedCount  int       `json:"failedCount"`
 	Finished     bool      `json:"finished"`
 	CreatedAt    time.Time `json:"createdAt"`
+	// CoverPhotoID is the first stamped photo, shown as the batch thumbnail; null while none is stamped.
+	CoverPhotoID *string `json:"coverPhotoId"`
 }
 
-// List returns recent batches, newest first.
-func (s *Service) List(ctx context.Context, limit int) ([]Summary, error) {
-	rows, err := s.DB.ListBatches(ctx, limit)
-	if err != nil {
-		return nil, err
+// Page is the body of GET /api/batches.
+type Page struct {
+	Batches []Summary `json:"batches"`
+	// NextBefore is the `before` value for the next (older) page, null on the last page.
+	NextBefore *int64 `json:"nextBefore"`
+}
+
+// List returns up to limit batches, newest first. With before > 0 it starts at the
+// batch just older than seq `before`.
+func (s *Service) List(ctx context.Context, limit int, before int64) (Page, error) {
+	if limit < 1 {
+		return Page{Batches: []Summary{}}, nil
 	}
-	out := make([]Summary, len(rows))
+	// One extra row tells whether an older page exists without a second query.
+	rows, err := s.DB.ListBatches(ctx, limit+1, before)
+	if err != nil {
+		return Page{}, err
+	}
+	page := Page{Batches: make([]Summary, 0, min(len(rows), limit))}
 	for i, r := range rows {
-		out[i] = Summary{
+		if i == limit {
+			last := page.Batches[limit-1].Seq
+			page.NextBefore = &last
+			break
+		}
+		page.Batches = append(page.Batches, Summary{
 			ID: r.ID, Seq: r.Seq, PriceKz: r.PriceKz, Sizes: r.Sizes, Description: r.Description,
 			StampLine1: r.StampLine1, StampLine2: r.StampLine2, PhotoCount: r.PhotoCount,
 			StampedCount: r.StampedCount, FailedCount: r.FailedCount, Finished: r.InFlight == 0, CreatedAt: r.CreatedAt,
-		}
+			CoverPhotoID: r.CoverPhotoID,
+		})
 	}
-	return out, nil
+	return page, nil
 }
 
 // Delete removes a batch, its rows and its objects.

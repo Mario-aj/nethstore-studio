@@ -166,12 +166,21 @@ func (s *Server) listBatches(w http.ResponseWriter, r *http.Request) {
 		}
 		limit = n
 	}
-	list, err := s.Batches.List(r.Context(), limit)
+	var before int64
+	if v := r.URL.Query().Get("before"); v != "" {
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil || n < 1 {
+			writeErr(w, http.StatusBadRequest, "invalid_before", "before must be a positive batch number")
+			return
+		}
+		before = n
+	}
+	page, err := s.Batches.List(r.Context(), limit, before)
 	if err != nil {
 		s.batchError(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"batches": list})
+	writeJSON(w, http.StatusOK, page)
 }
 
 func (s *Server) getBatch(w http.ResponseWriter, r *http.Request) {

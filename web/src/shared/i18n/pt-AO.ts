@@ -153,6 +153,8 @@ export const t = {
     sizes: 'Tamanhos',
     sizesChoose: 'Escolher',
     description: 'Descrição · opcional',
+    /** Já vem escrita num lote novo: é a peça mais comum (pedido de 14/11/2026). */
+    descriptionDefault: 'Veste',
     descriptionPlaceholder: 'Veste, Conjunto, Saia',
     descriptionTooLong: 'A descrição tem no máximo 24 caracteres.',
     descriptionInvalid: "Usa só letras, números e . , ' ( ) & +",
@@ -165,6 +167,26 @@ export const t = {
     creating: 'A criar o lote',
     batchDeleted: 'Lote apagado.',
     batchDeletedHint: 'As fotos que guardaste na galeria do telemóvel continuam lá.',
+  },
+
+  batches: {
+    link: 'Lotes',
+    back: 'Voltar aos lotes',
+    eyebrow: 'HISTÓRICO',
+    title: 'Lotes',
+    listLabel: 'Lotes processados',
+    today: 'HOJE',
+    yesterday: 'ONTEM',
+    meta: (seq: number, photos: number) => `Lote ${seq} · ${photos} ${plural(photos, 'foto', 'fotos')}`,
+    processing: 'A processar',
+    failed: (n: number) => `${n} ${plural(n, 'falhou', 'falharam')}`,
+    noneReady: 'Nenhuma ficou pronta',
+    emptyTitle: 'Ainda não há lotes',
+    emptyBody: 'Os grupos que processares aparecem aqui.',
+    newBatch: 'Novo lote',
+    more: 'Ver lotes mais antigos',
+    loadFailed: 'Não deu para carregar os lotes.',
+    tryAgain: 'Tentar outra vez',
   },
 
   sheet: {

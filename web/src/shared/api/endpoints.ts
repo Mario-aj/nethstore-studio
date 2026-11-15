@@ -1,5 +1,6 @@
 import { request } from './client';
 import {
+  batchPageSchema,
   batchSchema,
   configSchema,
   createdBatchSchema,
@@ -7,6 +8,7 @@ import {
   meSchema,
   uploadSlotSchema,
   type Batch,
+  type BatchPage,
   type CreatedBatch,
   type Me,
   type AppConfig,
@@ -27,6 +29,15 @@ export const api = {
     photoCount: number;
   }): Promise<CreatedBatch> =>
     request('/api/batches', { method: 'POST', body: input, schema: createdBatchSchema }),
+  /** Newest first; `before` is the `nextBefore` of the previous page. */
+  batches: (
+    { limit, before }: { limit: number; before?: number },
+    signal?: AbortSignal,
+  ): Promise<BatchPage> =>
+    request(`/api/batches?limit=${limit}${before ? `&before=${before}` : ''}`, {
+      schema: batchPageSchema,
+      signal,
+    }),
   batch: (id: string, signal?: AbortSignal): Promise<Batch> =>
     request(`/api/batches/${encodeURIComponent(id)}`, { schema: batchSchema, signal }),
   deleteBatch: (id: string) => request(`/api/batches/${encodeURIComponent(id)}`, { method: 'DELETE' }),
@@ -53,5 +64,6 @@ export const queryKeys = {
   health: ['health'] as const,
   config: ['config'] as const,
   me: ['me'] as const,
+  batches: ['batches'] as const,
   batch: (id: string) => ['batch', id] as const,
 };

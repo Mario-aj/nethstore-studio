@@ -1,8 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { isApiError } from '../../shared/api/client';
 import { api, queryKeys } from '../../shared/api/endpoints';
+import type { BatchPage as BatchListPage } from '../../shared/api/schemas';
 import { useDeployMode } from '../../shared/hooks/useAppConfig';
 import { useNow } from '../../shared/hooks/useNow';
 import { useWakeLock } from '../../shared/hooks/useWakeLock';
@@ -11,6 +12,7 @@ import { errorMessage, t } from '../../shared/i18n/pt-AO';
 import { AppHeader, HeaderLabel } from '../../shared/ui/AppHeader';
 import { Banner } from '../../shared/ui/Banner';
 import { LinkButton } from '../../shared/ui/Button';
+import { withoutBatch } from './batchesView';
 import { processingView, type EffectivePhoto } from './processingView';
 import { ProcessingScreen } from './ProcessingScreen';
 import { ReadyScreen } from './ReadyScreen';
@@ -23,8 +25,15 @@ const RECONNECTED_BANNER_MS = 5000;
 export default function BatchPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const mode = useDeployMode();
+  // Opened from "Lotes": the previous history entry is the list, so going back keeps its scroll.
+  const fromList = (location.state as { fromList?: unknown } | null)?.fromList === true;
+  const back = {
+    label: t.batches.back,
+    onClick: () => void (fromList ? navigate(-1) : navigate('/estudio/lotes')),
+  };
   const snapshot = useUploads();
   const batchUploads = snapshot.batches[id];
   const uploading = batchUploads?.active ?? false;
@@ -98,7 +107,7 @@ export default function BatchPage() {
     const code = isApiError(query.error) ? query.error.code : 'unknown';
     return (
       <div className={styles.page}>
-        <AppHeader compact />
+        <AppHeader compact back={back} />
         <div className={styles.notFound}>
           <p>{code === 'not_found' || code === 'invalid_id' ? t.processing.notFound : errorMessage(code)}</p>
           <LinkButton to="/estudio" variant="outline" icon="plus">
@@ -112,7 +121,7 @@ export default function BatchPage() {
   if (!batch) {
     return (
       <div className={styles.page} role="status">
-        <AppHeader compact />
+        <AppHeader compact back={back} />
         <span className="visually-hidden">{t.common.loading}</span>
       </div>
     );
@@ -121,8 +130,16 @@ export default function BatchPage() {
   const view = processingView({ batch, uploads: batchUploads, paused: snapshot.paused, mode, accepted });
   const label = <HeaderLabel>{t.processing.header(formatShortDate(new Date(batch.createdAt)))}</HeaderLabel>;
   const newGroup = () => void navigate('/estudio');
-  // The batch page no longer exists: replace it in the history, so "back" does not land on it.
+  // The batch page no longer exists. From "Lotes", go back to the list (already without
+  // the batch). Otherwise replace it in the history, so "back" does not land on it.
   const onDeleted = () => {
+    queryClient.setQueryData<InfiniteData<BatchListPage>>(queryKeys.batches, (data) =>
+      withoutBatch(data, id),
+    );
+    if (fromList) {
+      void navigate(-1);
+      return;
+    }
     void navigate('/estudio', { replace: true, state: { batchDeleted: true } });
     queryClient.removeQueries({ queryKey: queryKeys.batch(id) });
   };
@@ -169,7 +186,9 @@ export default function BatchPage() {
 
   return (
     <div className={pageClass}>
-      <AppHeader compact>{label}</AppHeader>
+      <AppHeader compact back={back}>
+        {label}
+      </AppHeader>
       {isReady ? (
         <ReadyScreen
           batch={batch}

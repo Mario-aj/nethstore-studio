@@ -1,0 +1,181 @@
+/* "Lotes": não está no design; segue os padrões de Fotos e preço (cabeçalho, título,
+   área vazia tracejada) e o cartão das etapas do Processamento (lista com divisórias). */
+.page {
+  min-height: 100dvh;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
+}
+
+.intro {
+  padding: 4px 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eyebrow,
+.day {
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-text-muted);
+}
+
+.title {
+  font-size: var(--text-h1-app);
+  font-weight: var(--weight-light);
+  letter-spacing: var(--tracking-display);
+  line-height: 1.1;
+}
+
+.loading {
+  min-height: 200px;
+}
+
+.state {
+  margin: 20px 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+/* Sem lotes */
+.empty {
+  margin: 20px 20px 0;
+  min-height: 240px;
+  border: var(--line) dashed var(--color-line-strong);
+  border-radius: var(--radius-card-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px 12px;
+  color: var(--color-text-soft);
+}
+
+.emptyText {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.emptyText p:first-child {
+  font-size: var(--text-body-lg);
+  color: var(--color-text);
+}
+
+.emptyText p:last-child {
+  font-size: var(--text-note);
+  color: var(--color-text-muted);
+}
+
+.empty .emptyButton {
+  height: 48px;
+  padding: 0 20px;
+  gap: 8px;
+  font-size: 15px;
+}
+
+/* Lista, por dia */
+.groups {
+  display: flex;
+  flex-direction: column;
+}
+
+.day {
+  margin: 24px 20px 10px;
+}
+
+.list {
+  margin: 0 20px;
+  list-style: none;
+  padding: 0;
+  background: var(--color-surface-1);
+  border: var(--line) solid var(--color-line);
+  border-radius: var(--radius-card-lg);
+  overflow: hidden;
+}
+
+.list > li + li {
+  border-top: var(--line) solid var(--color-line);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 8px 12px 12px;
+  color: inherit;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.row:active {
+  background: var(--color-surface-2);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+  border-radius: var(--radius-card-lg);
+}
+
+.cover {
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.line1 {
+  font-size: var(--text-body-lg);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.price {
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.meta {
+  font-size: var(--text-note);
+  color: var(--color-text-muted);
+}
+
+.progress {
+  color: var(--color-accent-soft-text);
+}
+
+.error {
+  color: var(--color-error-text);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.more {
+  margin: 20px 20px 0;
+}
+
+.moreError {
+  margin: 16px 20px 0;
+}
